@@ -107,7 +107,7 @@ Bu workflow:
 - `flutter pub get`
 - `flutter analyze`
 - `flutter test`
-- `pod install`
+- Swift Package Manager dependency hazırlığı
 - `flutter build ios --release --no-codesign`
 
 calistirir.

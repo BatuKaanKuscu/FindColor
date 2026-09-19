@@ -6,7 +6,6 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
       vars:
         BUNDLE_ID: com.renkyama.colordetector
     scripts:
@@ -16,10 +15,10 @@ workflows:
         script: flutter analyze
       - name: Flutter test
         script: flutter test
-      - name: Install CocoaPods dependencies
+      - name: Prepare iOS Swift Package Manager dependencies
         script: |
-          cd ios
-          pod install
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          flutter config --enable-swift-package-manager
       - name: Build unsigned iOS app
         script: flutter build ios --release --no-codesign
     artifacts:
@@ -35,7 +34,6 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
       groups:
         - appstore_credentials
       ios_signing:
@@ -51,6 +49,10 @@ workflows:
         script: flutter analyze
       - name: Flutter test
         script: flutter test
+      - name: Prepare iOS Swift Package Manager dependencies
+        script: |
+          rm -rf ~/Library/Developer/Xcode/DerivedData
+          flutter config --enable-swift-package-manager
       - name: Set up iOS code signing
         script: |
           keychain initialize
