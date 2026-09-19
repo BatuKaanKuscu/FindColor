@@ -1,6 +1,6 @@
 workflows:
   ios-unsigned-check:
-    name: iOS unsigned build check
+    name: iOS Unsigned Check
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
@@ -9,66 +9,18 @@ workflows:
       vars:
         BUNDLE_ID: com.renkyama.colordetector
     scripts:
-      - name: Flutter pub get
+      - name: Get Flutter packages
         script: flutter pub get
-      - name: Flutter analyze
+      - name: Analyze Dart code
         script: flutter analyze
-      - name: Flutter test
+      - name: Run unit tests
         script: flutter test
-      - name: Prepare iOS Swift Package Manager dependencies
-        script: |
-          rm -rf ~/Library/Developer/Xcode/DerivedData
-          flutter config --enable-swift-package-manager
+      - name: Enable Swift Package Manager
+        script: flutter config --enable-swift-package-manager
+      - name: Clear Xcode cache
+        script: rm -rf ~/Library/Developer/Xcode/DerivedData
       - name: Build unsigned iOS app
         script: flutter build ios --release --no-codesign
     artifacts:
       - build/ios/iphoneos/*.app
       - /tmp/xcodebuild_logs/*.log
-
-  ios-testflight:
-    name: iOS signed IPA and TestFlight
-    instance_type: mac_mini_m2
-    max_build_duration: 90
-    integrations:
-      app_store_connect: codemagic_app_store_connect
-    environment:
-      flutter: stable
-      xcode: latest
-      groups:
-        - appstore_credentials
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.renkyama.colordetector
-      vars:
-        BUNDLE_ID: com.renkyama.colordetector
-        APP_STORE_ID: "REPLACE_WITH_APP_STORE_CONNECT_APPLE_ID"
-    scripts:
-      - name: Flutter pub get
-        script: flutter pub get
-      - name: Flutter analyze
-        script: flutter analyze
-      - name: Flutter test
-        script: flutter test
-      - name: Prepare iOS Swift Package Manager dependencies
-        script: |
-          rm -rf ~/Library/Developer/Xcode/DerivedData
-          flutter config --enable-swift-package-manager
-      - name: Set up iOS code signing
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
-          keychain add-certificates
-          xcode-project use-profiles
-      - name: Build signed IPA
-        script: flutter build ipa --release
-    artifacts:
-      - build/ios/ipa/*.ipa
-      - build/ios/archive/*.xcarchive
-      - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
-    publishing:
-      app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        beta_groups:
-          - Internal Testers
