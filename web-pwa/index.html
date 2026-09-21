@@ -18,7 +18,10 @@
           <p class="eyebrow" data-i18n="appMode">Mobile color studio</p>
           <h1>Find Color</h1>
         </div>
-        <button id="languageButton" class="small-button" type="button">TR</button>
+        <div class="header-actions">
+          <button class="small-button" type="button" data-go="profile" data-i18n="profileShort">Profile</button>
+          <button id="languageButton" class="small-button" type="button">TR</button>
+        </div>
       </header>
 
       <section id="homeView" class="view is-active">
@@ -214,6 +217,10 @@
         <button class="nav-button" type="button" data-view="device">
           <span>D</span>
           <small data-i18n="navDevice">Device</small>
+        </button>
+        <button class="nav-button" type="button" data-view="profile">
+          <span>P</span>
+          <small data-i18n="navProfile">Profile</small>
         </button>
       </nav>
     </main>

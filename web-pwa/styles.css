@@ -49,6 +49,7 @@ button {
 
 .app-header,
 .section-row,
+.header-actions,
 .hero-actions,
 .actions {
   display: flex;
@@ -64,6 +65,10 @@ button {
 .app-header {
   min-height: 56px;
   margin-bottom: 14px;
+}
+
+.header-actions {
+  gap: 8px;
 }
 
 h1,
@@ -550,7 +555,7 @@ h2 {
   bottom: calc(env(safe-area-inset-bottom) + 10px);
   left: max(12px, calc((100vw - 460px) / 2 + 12px));
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 6px;
   padding: 8px;
   border: 1px solid var(--line);
@@ -585,7 +590,7 @@ h2 {
 .nav-button small {
   margin-top: 5px;
   overflow: hidden;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   text-overflow: ellipsis;
   white-space: nowrap;
