@@ -24,6 +24,13 @@
         </div>
       </header>
 
+      <nav class="top-tabs" aria-label="Color tools">
+        <button class="top-tab" type="button" data-go="camera" data-i18n="topMeasure">Olc</button>
+        <button class="top-tab" type="button" data-go="gallery" data-i18n="topGallery">Galeri</button>
+        <button class="top-tab" type="button" data-go="formula" data-i18n="topFormation">Olusum</button>
+        <button class="top-tab" type="button" data-go="device" data-i18n="topDevice">Cihaz</button>
+      </nav>
+
       <section id="homeView" class="view is-active">
         <div class="hero-card">
           <p class="eyebrow" data-i18n="welcome">Welcome</p>
@@ -120,14 +127,28 @@
             Clear
           </button>
         </div>
-        <div id="galleryGrid" class="gallery-grid"></div>
+        <section class="panel gallery-section">
+          <div class="section-row">
+            <h2 data-i18n="savedGalleryTitle">Kaydedilen renkler</h2>
+            <span id="savedGalleryCount" class="status-pill">0</span>
+          </div>
+          <p class="muted" data-i18n="tapToFormula">Bir renge dokununca olusum hesaplama ekranina gider.</p>
+          <div id="savedGalleryGrid" class="gallery-grid"></div>
+        </section>
+
+        <section class="panel gallery-section">
+          <div class="section-row">
+            <h2 data-i18n="vibrantCatalog">Canli renk katalogu</h2>
+          </div>
+          <div id="catalogGalleryGrid" class="gallery-grid"></div>
+        </section>
       </section>
 
       <section id="formulaView" class="view">
         <div class="section-row">
           <div>
             <p class="eyebrow" data-i18n="mixing">MIXING</p>
-            <h2 data-i18n="formulaTitle">Pigment calculator</h2>
+            <h2 data-i18n="formulaTitle">Color formation</h2>
           </div>
           <div id="formulaSwatch" class="mini-swatch"></div>
         </div>

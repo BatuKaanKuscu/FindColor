@@ -16,6 +16,10 @@ const translations = {
     selectedColor: 'Secili',
     latestColors: 'Son renkler',
     seeAll: 'Tumunu gor',
+    topMeasure: 'Olc',
+    topGallery: 'Galeri',
+    topFormation: 'Olusum',
+    topDevice: 'Cihaz',
     liveCamera: 'CANLI KAMERA',
     centerSampling: 'Merkez olcum',
     startCamera: 'Kamerayi Baslat',
@@ -26,7 +30,10 @@ const translations = {
     colorGallery: 'Renk galerisi',
     clear: 'Temizle',
     mixing: 'KARISIM',
-    formulaTitle: 'Pigment hesaplayici',
+    formulaTitle: 'Rengin olusumu',
+    savedGalleryTitle: 'Kaydedilen renkler',
+    vibrantCatalog: 'Canli renk katalogu',
+    tapToFormula: 'Bir renge dokununca olusum hesaplama ekranina gider.',
     targetMl: 'Hedef miktar (ml)',
     formulaNote: 'Sadece demo pigment orani; endustriyel kimyasal formul degildir.',
     chooseColor: 'Renk sec',
@@ -52,6 +59,8 @@ const translations = {
     navProfile: 'Profil',
     noColors: 'Henuz renk kaydedilmedi.',
     saved: 'Renk galeriye kaydedildi.',
+    catalogColor: 'Katalog rengi',
+    savedColor: 'Kayitli renk',
     measuring: 'Merkezdeki alan olculuyor.',
     waitingPermission: 'Kamera izni bekleniyor...',
     cameraUnsupported: 'Bu tarayici kamera erisimini desteklemiyor.',
@@ -72,6 +81,10 @@ const translations = {
     selectedColor: 'Selected',
     latestColors: 'Latest colors',
     seeAll: 'See all',
+    topMeasure: 'Measure',
+    topGallery: 'Gallery',
+    topFormation: 'Formation',
+    topDevice: 'Device',
     liveCamera: 'LIVE CAMERA',
     centerSampling: 'Center sampling',
     startCamera: 'Start Camera',
@@ -82,7 +95,10 @@ const translations = {
     colorGallery: 'Color gallery',
     clear: 'Clear',
     mixing: 'MIXING',
-    formulaTitle: 'Pigment calculator',
+    formulaTitle: 'Color formation',
+    savedGalleryTitle: 'Saved colors',
+    vibrantCatalog: 'Vibrant color catalog',
+    tapToFormula: 'Tap a color to open the formation calculator.',
     targetMl: 'Target amount (ml)',
     formulaNote: 'Demo pigment ratios only; not an industrial chemical formula.',
     chooseColor: 'Choose color',
@@ -108,6 +124,8 @@ const translations = {
     navProfile: 'Profile',
     noColors: 'No saved colors yet.',
     saved: 'Color saved to gallery.',
+    catalogColor: 'Catalog color',
+    savedColor: 'Saved color',
     measuring: 'Center area is being measured.',
     waitingPermission: 'Waiting for camera permission...',
     cameraUnsupported: 'This browser does not support camera access.',
@@ -141,6 +159,19 @@ const pigmentLabels = {
 
 const themeOptions = ['#4dd0e1', '#6ee7b7', '#f8c146', '#ff7a90', '#a78bfa'];
 
+const catalogColors = [
+  { id: 'cat-coral', name: { tr: 'Canli mercan', en: 'Vivid coral' }, red: 255, green: 92, blue: 92, hex: '#FF5C5C' },
+  { id: 'cat-amber', name: { tr: 'Parlak amber', en: 'Bright amber' }, red: 255, green: 190, blue: 64, hex: '#FFBE40' },
+  { id: 'cat-lime', name: { tr: 'Lime yesili', en: 'Lime green' }, red: 132, green: 235, blue: 82, hex: '#84EB52' },
+  { id: 'cat-mint', name: { tr: 'Nane', en: 'Mint' }, red: 63, green: 224, blue: 181, hex: '#3FE0B5' },
+  { id: 'cat-cyan', name: { tr: 'Elektrik cyan', en: 'Electric cyan' }, red: 47, green: 211, blue: 255, hex: '#2FD3FF' },
+  { id: 'cat-blue', name: { tr: 'Kobalt mavi', en: 'Cobalt blue' }, red: 70, green: 112, blue: 255, hex: '#4670FF' },
+  { id: 'cat-violet', name: { tr: 'Mor neon', en: 'Neon violet' }, red: 166, green: 104, blue: 255, hex: '#A668FF' },
+  { id: 'cat-pink', name: { tr: 'Fusya', en: 'Fuchsia' }, red: 255, green: 78, blue: 174, hex: '#FF4EAE' },
+  { id: 'cat-terracotta', name: { tr: 'Terracotta', en: 'Terracotta' }, red: 198, green: 91, blue: 61, hex: '#C65B3D' },
+  { id: 'cat-sage', name: { tr: 'Ada cayi', en: 'Sage' }, red: 143, green: 167, blue: 128, hex: '#8FA780' },
+];
+
 const video = document.querySelector('#cameraFeed');
 const canvas = document.querySelector('#sampleCanvas');
 const colorPreview = document.querySelector('#colorPreview');
@@ -152,8 +183,10 @@ const measureButton = document.querySelector('#measureButton');
 const retryButton = document.querySelector('#retryButton');
 const recentColors = document.querySelector('#recentColors');
 const homeRecentColors = document.querySelector('#homeRecentColors');
-const galleryGrid = document.querySelector('#galleryGrid');
+const savedGalleryGrid = document.querySelector('#savedGalleryGrid');
+const catalogGalleryGrid = document.querySelector('#catalogGalleryGrid');
 const clearGalleryButton = document.querySelector('#clearGalleryButton');
+const savedGalleryCount = document.querySelector('#savedGalleryCount');
 const savedCount = document.querySelector('#savedCount');
 const selectedHex = document.querySelector('#selectedHex');
 const formulaSwatch = document.querySelector('#formulaSwatch');
@@ -223,6 +256,10 @@ function setView(viewName) {
 
   document.querySelectorAll('.nav-button').forEach((button) => {
     button.classList.toggle('is-active', button.dataset.view === viewName);
+  });
+
+  document.querySelectorAll('.top-tab').forEach((button) => {
+    button.classList.toggle('is-active', button.dataset.go === viewName);
   });
 
   if (viewName !== 'camera') {
@@ -346,6 +383,7 @@ function saveLiveColor() {
   const color = {
     ...liveColor,
     id: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : String(Date.now()),
+    source: 'camera',
     createdAt: new Date().toISOString(),
   };
 
@@ -362,6 +400,18 @@ function selectColor(color) {
   writeJson(storageKeys.selectedColor, selectedColor);
   renderAll();
   setView('formula');
+}
+
+function getColorName(color, fallback = '') {
+  if (typeof color.name === 'string') {
+    return color.name;
+  }
+
+  if (color.name && typeof color.name === 'object') {
+    return color.name[settings.language] || color.name.en || fallback;
+  }
+
+  return fallback;
 }
 
 function colorToRecipe(color, totalMl) {
@@ -399,7 +449,7 @@ function colorToRecipe(color, totalMl) {
 
 function renderColorStrip(target, limit = 8) {
   target.innerHTML = '';
-  const items = colors.slice(0, limit);
+  const items = colors.length ? colors.slice(0, limit) : catalogColors.slice(0, limit);
 
   if (!items.length) {
     const empty = document.createElement('p');
@@ -421,34 +471,47 @@ function renderColorStrip(target, limit = 8) {
 }
 
 function renderGallery() {
-  galleryGrid.innerHTML = '';
+  savedGalleryGrid.innerHTML = '';
+  catalogGalleryGrid.innerHTML = '';
+  savedGalleryCount.textContent = String(colors.length);
 
   if (!colors.length) {
     const empty = document.createElement('p');
     empty.className = 'muted';
     empty.textContent = t('noColors');
-    galleryGrid.append(empty);
-    return;
+    savedGalleryGrid.append(empty);
   }
 
   colors.forEach((color, index) => {
-    const card = document.createElement('button');
-    card.className = 'gallery-card';
-    card.type = 'button';
-    card.innerHTML = `
-      <div class="gallery-swatch" style="--swatch: ${color.hex}"></div>
-      <strong>${color.hex}</strong>
-      <span>RGB ${color.red}, ${color.green}, ${color.blue}</span>
-      <span>#${index + 1}</span>
-    `;
-    card.addEventListener('click', () => selectColor(color));
-    galleryGrid.append(card);
+    savedGalleryGrid.append(createGalleryCard(color, `${t('savedColor')} #${index + 1}`));
   });
+
+  catalogColors.forEach((color) => {
+    catalogGalleryGrid.append(createGalleryCard(color, getColorName(color, t('catalogColor'))));
+  });
+}
+
+function createGalleryCard(color, title) {
+  const card = document.createElement('button');
+  card.className = 'gallery-card';
+  card.type = 'button';
+  card.innerHTML = `
+    <div class="gallery-swatch" style="--swatch: ${color.hex}"></div>
+    <strong>${title}</strong>
+    <span>${color.hex}</span>
+    <span>RGB ${color.red}, ${color.green}, ${color.blue}</span>
+    <em>${t('topFormation')}</em>
+  `;
+  card.addEventListener('click', () => selectColor(color));
+  return card;
 }
 
 function renderFormula() {
   const totalMl = Math.max(10, Number(mlInput.value) || 250);
-  formulaColorTitle.textContent = selectedColor ? selectedColor.hex : '-';
+  const colorName = selectedColor ? getColorName(selectedColor, '') : '';
+  formulaColorTitle.textContent = selectedColor
+    ? `${colorName ? `${colorName} ` : ''}${selectedColor.hex}`
+    : '-';
   formulaSwatch.style.backgroundColor = selectedColor?.hex || '#2a2f35';
   selectedHex.textContent = selectedColor?.hex || '-';
   recipeList.innerHTML = '';

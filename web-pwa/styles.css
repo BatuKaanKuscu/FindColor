@@ -64,11 +64,40 @@ button {
 
 .app-header {
   min-height: 56px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .header-actions {
   gap: 8px;
+}
+
+.top-tabs {
+  position: sticky;
+  top: max(0px, env(safe-area-inset-top));
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0 -2px 14px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgb(15 17 20 / 94%);
+  backdrop-filter: blur(18px);
+}
+
+.top-tab {
+  min-height: 38px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, rgb(255 255 255 / 6%));
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.top-tab.is-active {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 h1,
@@ -414,6 +443,10 @@ h2 {
   height: 34px;
 }
 
+.gallery-section {
+  padding-top: 14px;
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -448,6 +481,18 @@ h2 {
   margin-top: 3px;
   color: var(--muted);
   font-size: 12px;
+}
+
+.gallery-card em {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--text);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .mini-swatch {
