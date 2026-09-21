@@ -60,7 +60,7 @@ const translations = {
     noColors: 'Henuz renk kaydedilmedi.',
     saved: 'Renk galeriye kaydedildi.',
     catalogColor: 'Katalog rengi',
-    savedColor: 'Kayitli renk',
+    savedColor: 'Olculen renk',
     measuring: 'Merkezdeki alan olculuyor.',
     waitingPermission: 'Kamera izni bekleniyor...',
     cameraUnsupported: 'Bu tarayici kamera erisimini desteklemiyor.',
@@ -125,7 +125,7 @@ const translations = {
     noColors: 'No saved colors yet.',
     saved: 'Color saved to gallery.',
     catalogColor: 'Catalog color',
-    savedColor: 'Saved color',
+    savedColor: 'Measured color',
     measuring: 'Center area is being measured.',
     waitingPermission: 'Waiting for camera permission...',
     cameraUnsupported: 'This browser does not support camera access.',
@@ -171,6 +171,31 @@ const catalogColors = [
   { id: 'cat-terracotta', name: { tr: 'Terracotta', en: 'Terracotta' }, red: 198, green: 91, blue: 61, hex: '#C65B3D' },
   { id: 'cat-sage', name: { tr: 'Ada cayi', en: 'Sage' }, red: 143, green: 167, blue: 128, hex: '#8FA780' },
 ];
+
+const hueNames = {
+  tr: [
+    ['Kirmizi', 15],
+    ['Turuncu', 45],
+    ['Sari', 75],
+    ['Yesil', 165],
+    ['Cyan', 195],
+    ['Mavi', 255],
+    ['Mor', 285],
+    ['Pembe', 345],
+    ['Kirmizi', 360],
+  ],
+  en: [
+    ['Red', 15],
+    ['Orange', 45],
+    ['Yellow', 75],
+    ['Green', 165],
+    ['Cyan', 195],
+    ['Blue', 255],
+    ['Purple', 285],
+    ['Pink', 345],
+    ['Red', 360],
+  ],
+};
 
 const video = document.querySelector('#cameraFeed');
 const canvas = document.querySelector('#sampleCanvas');
@@ -384,6 +409,7 @@ function saveLiveColor() {
     ...liveColor,
     id: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : String(Date.now()),
     source: 'camera',
+    name: buildColorName(liveColor),
     createdAt: new Date().toISOString(),
   };
 
@@ -411,7 +437,66 @@ function getColorName(color, fallback = '') {
     return color.name[settings.language] || color.name.en || fallback;
   }
 
-  return fallback;
+  const generated = buildColorName(color);
+  return generated[settings.language] || generated.en || fallback;
+}
+
+function buildColorName(color) {
+  const { hue, saturation, lightness } = rgbToHsl(color.red, color.green, color.blue);
+  const language = settings.language;
+
+  if (saturation < 8) {
+    if (lightness < 18) {
+      return { tr: 'Siyah', en: 'Black' };
+    }
+
+    if (lightness > 84) {
+      return { tr: 'Beyaz', en: 'White' };
+    }
+
+    return { tr: lightness > 50 ? 'Acik gri' : 'Koyu gri', en: lightness > 50 ? 'Light gray' : 'Dark gray' };
+  }
+
+  const base = hueNames[language].find((item) => hue <= item[1])?.[0] || hueNames[language][0][0];
+  const englishBase = hueNames.en.find((item) => hue <= item[1])?.[0] || hueNames.en[0][0];
+  const toneTr = lightness < 28 ? 'Koyu' : lightness > 72 ? 'Acik' : saturation > 62 ? 'Canli' : 'Yumusak';
+  const toneEn = lightness < 28 ? 'Dark' : lightness > 72 ? 'Light' : saturation > 62 ? 'Vivid' : 'Soft';
+
+  return {
+    tr: `${toneTr} ${base.toLowerCase()}`,
+    en: `${toneEn} ${englishBase.toLowerCase()}`,
+  };
+}
+
+function rgbToHsl(red, green, blue) {
+  const r = red / 255;
+  const g = green / 255;
+  const b = blue / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const lightness = (max + min) / 2;
+
+  if (max === min) {
+    return { hue: 0, saturation: 0, lightness: lightness * 100 };
+  }
+
+  const delta = max - min;
+  const saturation = lightness > 0.5 ? delta / (2 - max - min) : delta / (max + min);
+  let hue;
+
+  if (max === r) {
+    hue = (g - b) / delta + (g < b ? 6 : 0);
+  } else if (max === g) {
+    hue = (b - r) / delta + 2;
+  } else {
+    hue = (r - g) / delta + 4;
+  }
+
+  return {
+    hue: hue * 60,
+    saturation: saturation * 100,
+    lightness: lightness * 100,
+  };
 }
 
 function colorToRecipe(color, totalMl) {
@@ -482,8 +567,8 @@ function renderGallery() {
     savedGalleryGrid.append(empty);
   }
 
-  colors.forEach((color, index) => {
-    savedGalleryGrid.append(createGalleryCard(color, `${t('savedColor')} #${index + 1}`));
+  colors.forEach((color) => {
+    savedGalleryGrid.append(createGalleryCard(color, getColorName(color, t('savedColor'))));
   });
 
   catalogColors.forEach((color) => {
