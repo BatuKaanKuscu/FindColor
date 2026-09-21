@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101214" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Find Color" />
+    <title>Find Color</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="camera-stage" aria-label="Canli kamera renk olcumu">
+        <video id="cameraFeed" autoplay muted playsinline></video>
+        <canvas id="sampleCanvas" width="80" height="80" aria-hidden="true"></canvas>
+
+        <div class="top-bar">
+          <p>CANLI KAMERA</p>
+          <h1>Find Color</h1>
+        </div>
+
+        <div class="measurement-box" aria-hidden="true">
+          <span></span>
+        </div>
+
+        <button id="startButton" class="start-button" type="button">
+          Kamerayi Baslat
+        </button>
+
+        <section class="result-panel" aria-label="Algilanan renk sonucu">
+          <p class="section-label">ALGILANAN RENK</p>
+          <div id="colorPreview" class="color-preview"></div>
+
+          <div class="values">
+            <div>
+              <span>RGB</span>
+              <strong id="rgbValue">-</strong>
+            </div>
+            <div>
+              <span>HEX</span>
+              <strong id="hexValue">-</strong>
+            </div>
+          </div>
+
+          <p id="statusText" class="status-text">
+            Kamerayi baslatmak icin izin ver.
+          </p>
+
+          <div class="actions">
+            <button id="measureButton" class="measure-button" type="button" disabled>
+              Rengi Olc
+            </button>
+            <button id="retryButton" class="icon-button" type="button" aria-label="Kamerayi yeniden baslat">
+              ↻
+            </button>
+          </div>
+
+          <p id="lockedColor" class="locked-color"></p>
+        </section>
+      </section>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

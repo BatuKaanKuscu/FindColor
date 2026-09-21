@@ -153,6 +153,28 @@ Apple Developer hesabi olmadan:
 
 Yine de Windows -> GitHub -> Codemagic akisiyle unsigned compile kontrolu, `flutter analyze` ve `flutter test` yapabilirsiniz.
 
+## Render Web/PWA Surumu
+
+Apple Developer hesabi olmadan iPhone'da uygulama benzeri deneyim icin repo icine mobil web/PWA surumu eklendi:
+
+- [web-pwa/index.html](web-pwa/index.html)
+- [web-pwa/app.js](web-pwa/app.js)
+- [web-pwa/styles.css](web-pwa/styles.css)
+- [web-pwa/manifest.webmanifest](web-pwa/manifest.webmanifest)
+- [render.yaml](render.yaml)
+
+Bu surum Safari uzerinden kamera izni ister, merkez 50x50 piksel alanini analiz eder, RGB/HEX sonucunu gosterir ve ana ekrana eklenebilir.
+
+Render ayarlari:
+
+- Service type: `Static Site`
+- Repository: `BatuKaanKuscu/FindColor`
+- Branch: `main`
+- Build Command: `echo "No build required"`
+- Publish Directory: `web-pwa`
+
+Render `render.yaml` blueprint dosyasini kullanirsa bu alanlari otomatik okuyabilir.
+
 ## Apple Developer Varsa
 
 1. Apple Developer Program uyeliginizi aktif edin.

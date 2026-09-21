@@ -1,0 +1,18 @@
+{
+  "name": "Find Color",
+  "short_name": "Find Color",
+  "description": "Mobil kamera ile yuzey rengini RGB ve HEX olarak olcer.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101214",
+  "theme_color": "#101214",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
