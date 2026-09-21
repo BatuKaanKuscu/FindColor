@@ -12,55 +12,210 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="app-shell">
-      <section class="camera-stage" aria-label="Canli kamera renk olcumu">
-        <video id="cameraFeed" autoplay muted playsinline></video>
-        <canvas id="sampleCanvas" width="80" height="80" aria-hidden="true"></canvas>
-
-        <div class="top-bar">
-          <p>CANLI KAMERA</p>
+    <main class="phone-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow" data-i18n="appMode">Mobile color studio</p>
           <h1>Find Color</h1>
         </div>
+        <button id="languageButton" class="small-button" type="button">TR</button>
+      </header>
 
-        <div class="measurement-box" aria-hidden="true">
-          <span></span>
+      <section id="homeView" class="view is-active">
+        <div class="hero-card">
+          <p class="eyebrow" data-i18n="welcome">Welcome</p>
+          <h2 id="welcomeTitle">Find Color</h2>
+          <p class="muted" data-i18n="homeCopy">
+            Save measured colors, browse your gallery, and calculate demo pigment ratios by milliliter.
+          </p>
+          <div class="hero-actions">
+            <button class="primary-button" type="button" data-go="camera" data-i18n="openCamera">
+              Open Camera
+            </button>
+            <button class="secondary-button" type="button" data-go="gallery" data-i18n="openGallery">
+              Gallery
+            </button>
+          </div>
         </div>
 
-        <button id="startButton" class="start-button" type="button">
-          Kamerayi Baslat
-        </button>
+        <div class="stat-grid">
+          <article>
+            <span data-i18n="savedColors">Saved colors</span>
+            <strong id="savedCount">0</strong>
+          </article>
+          <article>
+            <span data-i18n="selectedColor">Selected</span>
+            <strong id="selectedHex">-</strong>
+          </article>
+        </div>
 
-        <section class="result-panel" aria-label="Algilanan renk sonucu">
-          <p class="section-label">ALGILANAN RENK</p>
-          <div id="colorPreview" class="color-preview"></div>
-
-          <div class="values">
-            <div>
-              <span>RGB</span>
-              <strong id="rgbValue">-</strong>
-            </div>
-            <div>
-              <span>HEX</span>
-              <strong id="hexValue">-</strong>
-            </div>
+        <section class="panel">
+          <div class="section-row">
+            <h2 data-i18n="latestColors">Latest colors</h2>
+            <button class="text-button" type="button" data-go="gallery" data-i18n="seeAll">See all</button>
           </div>
-
-          <p id="statusText" class="status-text">
-            Kamerayi baslatmak icin izin ver.
-          </p>
-
-          <div class="actions">
-            <button id="measureButton" class="measure-button" type="button" disabled>
-              Rengi Olc
-            </button>
-            <button id="retryButton" class="icon-button" type="button" aria-label="Kamerayi yeniden baslat">
-              ↻
-            </button>
-          </div>
-
-          <p id="lockedColor" class="locked-color"></p>
+          <div id="homeRecentColors" class="color-strip"></div>
         </section>
       </section>
+
+      <section id="cameraView" class="view">
+        <section class="camera-stage" aria-label="Live camera color measurement">
+          <video id="cameraFeed" autoplay muted playsinline></video>
+          <canvas id="sampleCanvas" width="80" height="80" aria-hidden="true"></canvas>
+
+          <div class="camera-label">
+            <p data-i18n="liveCamera">LIVE CAMERA</p>
+            <h2 data-i18n="centerSampling">Center sampling</h2>
+          </div>
+
+          <div class="measurement-box" aria-hidden="true"></div>
+
+          <button id="startButton" class="start-button" type="button" data-i18n="startCamera">
+            Start Camera
+          </button>
+
+          <section class="result-panel" aria-label="Detected color result">
+            <p class="eyebrow" data-i18n="detectedColor">DETECTED COLOR</p>
+            <div id="colorPreview" class="color-preview"></div>
+
+            <div class="values">
+              <div>
+                <span>RGB</span>
+                <strong id="rgbValue">-</strong>
+              </div>
+              <div>
+                <span>HEX</span>
+                <strong id="hexValue">-</strong>
+              </div>
+            </div>
+
+            <p id="statusText" class="status-text" data-i18n="cameraPrompt">
+              Allow camera access to start.
+            </p>
+
+            <div class="actions">
+              <button id="measureButton" class="primary-button" type="button" disabled data-i18n="saveColor">
+                Save Color
+              </button>
+              <button id="retryButton" class="icon-button" type="button" aria-label="Restart camera">
+                R
+              </button>
+            </div>
+
+            <div id="recentColors" class="color-strip compact"></div>
+          </section>
+        </section>
+      </section>
+
+      <section id="galleryView" class="view">
+        <div class="section-row">
+          <div>
+            <p class="eyebrow" data-i18n="catalog">CATALOG</p>
+            <h2 data-i18n="colorGallery">Color gallery</h2>
+          </div>
+          <button id="clearGalleryButton" class="small-button danger" type="button" data-i18n="clear">
+            Clear
+          </button>
+        </div>
+        <div id="galleryGrid" class="gallery-grid"></div>
+      </section>
+
+      <section id="formulaView" class="view">
+        <div class="section-row">
+          <div>
+            <p class="eyebrow" data-i18n="mixing">MIXING</p>
+            <h2 data-i18n="formulaTitle">Pigment calculator</h2>
+          </div>
+          <div id="formulaSwatch" class="mini-swatch"></div>
+        </div>
+
+        <section class="panel">
+          <label class="input-label" for="mlInput" data-i18n="targetMl">Target amount (ml)</label>
+          <input id="mlInput" class="number-input" type="number" min="10" max="5000" step="10" value="250" />
+          <p class="muted" data-i18n="formulaNote">
+            Demo pigment ratios only; not an industrial chemical formula.
+          </p>
+        </section>
+
+        <section class="panel">
+          <div class="section-row">
+            <h2 id="formulaColorTitle">-</h2>
+            <button class="text-button" type="button" data-go="gallery" data-i18n="chooseColor">
+              Choose color
+            </button>
+          </div>
+          <div id="recipeList" class="recipe-list"></div>
+        </section>
+      </section>
+
+      <section id="deviceView" class="view">
+        <div class="section-row">
+          <div>
+            <p class="eyebrow" data-i18n="device">DEVICE</p>
+            <h2 data-i18n="connectDevice">Connect device</h2>
+          </div>
+          <span id="deviceState" class="status-pill" data-i18n="offline">Offline</span>
+        </div>
+
+        <section class="panel">
+          <button id="connectDeviceButton" class="primary-button full" type="button" data-i18n="pairDevice">
+            Pair demo device
+          </button>
+          <label class="input-label" for="deviceMlInput" data-i18n="deviceMl">Device amount (ml)</label>
+          <input id="deviceMlInput" class="number-input" type="number" min="10" max="5000" step="10" value="250" />
+          <button id="sendRecipeButton" class="secondary-button full" type="button" data-i18n="sendToDevice">
+            Send recipe to device
+          </button>
+          <pre id="deviceLog" class="device-log"></pre>
+        </section>
+      </section>
+
+      <section id="profileView" class="view">
+        <div class="section-row">
+          <div>
+            <p class="eyebrow" data-i18n="profile">PROFILE</p>
+            <h2 data-i18n="userModule">User module</h2>
+          </div>
+        </div>
+
+        <section class="panel">
+          <label class="input-label" for="userNameInput" data-i18n="userName">User name</label>
+          <input id="userNameInput" class="text-input" type="text" maxlength="32" placeholder="Batu" />
+          <label class="input-label" for="workspaceInput" data-i18n="workspace">Workspace</label>
+          <input id="workspaceInput" class="text-input" type="text" maxlength="42" placeholder="Renk atolyesi" />
+          <button id="saveProfileButton" class="primary-button full" type="button" data-i18n="saveProfile">
+            Save profile
+          </button>
+        </section>
+
+        <section class="panel">
+          <h2 data-i18n="siteColor">Site color</h2>
+          <div id="themePalette" class="theme-palette"></div>
+        </section>
+      </section>
+
+      <nav class="bottom-nav" aria-label="Primary">
+        <button class="nav-button is-active" type="button" data-view="home">
+          <span>H</span>
+          <small data-i18n="navHome">Home</small>
+        </button>
+        <button class="nav-button" type="button" data-view="camera">
+          <span>C</span>
+          <small data-i18n="navCamera">Camera</small>
+        </button>
+        <button class="nav-button" type="button" data-view="gallery">
+          <span>G</span>
+          <small data-i18n="navGallery">Gallery</small>
+        </button>
+        <button class="nav-button" type="button" data-view="formula">
+          <span>M</span>
+          <small data-i18n="navMix">Mix</small>
+        </button>
+        <button class="nav-button" type="button" data-view="device">
+          <span>D</span>
+          <small data-i18n="navDevice">Device</small>
+        </button>
+      </nav>
     </main>
 
     <script src="./app.js" defer></script>
