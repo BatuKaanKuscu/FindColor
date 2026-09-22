@@ -64,6 +64,11 @@ const translations = {
     measuring: 'Merkezdeki alan olculuyor.',
     waitingPermission: 'Kamera izni bekleniyor...',
     cameraUnsupported: 'Bu tarayici kamera erisimini desteklemiyor.',
+    cameraNeedsSecureContext: 'Kamera icin siteyi HTTPS uzerinden acman gerekiyor.',
+    cameraPermissionDenied: 'Kamera izni reddedildi. Tarayici ayarlarindan Find Color icin kamerayi ac.',
+    cameraPermissionBlocked: 'Kamera izni engellenmis. Site ayarlarindan kamera iznini sifirlayip tekrar dene.',
+    cameraInUse: 'Kamera baska bir uygulama tarafindan kullaniliyor olabilir.',
+    cameraNoDevice: 'Bu cihazda kullanilabilir kamera bulunamadi.',
     cameraFailed: 'Kamera acilamadi',
     profileSaved: 'Profil kaydedildi.',
     selectColorFirst: 'Once galeriden bir renk sec.',
@@ -129,6 +134,11 @@ const translations = {
     measuring: 'Center area is being measured.',
     waitingPermission: 'Waiting for camera permission...',
     cameraUnsupported: 'This browser does not support camera access.',
+    cameraNeedsSecureContext: 'Camera access requires opening the site over HTTPS.',
+    cameraPermissionDenied: 'Camera permission was denied. Enable camera access for Find Color in browser settings.',
+    cameraPermissionBlocked: 'Camera permission is blocked. Reset the camera permission in site settings and try again.',
+    cameraInUse: 'The camera may already be in use by another app.',
+    cameraNoDevice: 'No usable camera was found on this device.',
     cameraFailed: 'Camera could not be opened',
     profileSaved: 'Profile saved.',
     selectColorFirst: 'Choose a color from the gallery first.',
@@ -366,6 +376,9 @@ function stopCamera() {
     stream.getTracks().forEach((track) => track.stop());
     stream = null;
   }
+
+  video.pause();
+  video.srcObject = null;
 }
 
 async function startCamera() {
@@ -376,28 +389,112 @@ async function startCamera() {
     return;
   }
 
-  try {
-    setStatus(t('waitingPermission'));
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-    });
+  if (!window.isSecureContext) {
+    setStatus(t('cameraNeedsSecureContext'), true);
+    return;
+  }
 
+  try {
+    startButton.disabled = true;
+    measureButton.disabled = true;
+    setStatus(t('waitingPermission'));
+    stream = await requestCameraStream();
+
+    video.setAttribute('playsinline', '');
+    video.setAttribute('autoplay', '');
+    video.muted = true;
+    video.playsInline = true;
     video.srcObject = stream;
+    await waitForVideoMetadata();
     await video.play();
     startButton.classList.add('is-hidden');
     setStatus(t('measuring'));
     analyzeCenterColor();
     analysisTimer = window.setInterval(analyzeCenterColor, analysisIntervalMs);
   } catch (error) {
+    stopCamera();
     startButton.classList.remove('is-hidden');
     measureButton.disabled = true;
-    setStatus(`${t('cameraFailed')}: ${error.message}`, true);
+    setStatus(buildCameraErrorMessage(error), true);
+  } finally {
+    startButton.disabled = false;
   }
+}
+
+async function requestCameraStream() {
+  const constraintOptions = [
+    {
+      audio: false,
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+    },
+    {
+      audio: false,
+      video: {
+        facingMode: 'environment',
+      },
+    },
+    {
+      audio: false,
+      video: true,
+    },
+  ];
+
+  let lastError = null;
+
+  for (const constraints of constraintOptions) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error(t('cameraFailed'));
+}
+
+function waitForVideoMetadata() {
+  if (video.videoWidth && video.videoHeight) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(resolve, 1500);
+    video.addEventListener(
+      'loadedmetadata',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
+function buildCameraErrorMessage(error) {
+  const name = error?.name || '';
+
+  if (name === 'NotAllowedError' || name === 'SecurityError') {
+    return t('cameraPermissionDenied');
+  }
+
+  if (name === 'PermissionDeniedError') {
+    return t('cameraPermissionBlocked');
+  }
+
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+    return t('cameraNoDevice');
+  }
+
+  if (name === 'NotReadableError' || name === 'TrackStartError') {
+    return t('cameraInUse');
+  }
+
+  const detail = error?.message || name;
+  return detail ? `${t('cameraFailed')}: ${detail}` : t('cameraFailed');
 }
 
 function saveLiveColor() {

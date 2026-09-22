@@ -46,11 +46,9 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.paused ||
+    if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
-      unawaited(_cameraService.dispose());
-      _controller = null;
+      unawaited(_disposeCameraForLifecycle());
       return;
     }
 
@@ -59,8 +57,24 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _disposeCameraForLifecycle() async {
+    await _cameraService.dispose();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _controller = null;
+    });
+  }
+
   Future<void> _initializeCamera() async {
     if (_isInitializing) {
+      return;
+    }
+
+    final currentController = _controller;
+    if (currentController != null && currentController.value.isInitialized) {
       return;
     }
 
