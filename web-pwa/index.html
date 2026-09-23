@@ -28,6 +28,7 @@
         <button class="top-tab" type="button" data-go="camera" data-i18n="topMeasure">Olc</button>
         <button class="top-tab" type="button" data-go="gallery" data-i18n="topGallery">Galeri</button>
         <button class="top-tab" type="button" data-go="formula" data-i18n="topFormation">Olusum</button>
+        <button class="top-tab" type="button" data-go="ai" data-i18n="topAI">AI</button>
         <button class="top-tab" type="button" data-go="device" data-i18n="topDevice">Cihaz</button>
       </nav>
 
@@ -44,6 +45,9 @@
             </button>
             <button class="secondary-button" type="button" data-go="gallery" data-i18n="openGallery">
               Gallery
+            </button>
+            <button class="secondary-button" type="button" data-go="ai" data-i18n="openAI">
+              AI Image
             </button>
           </div>
         </div>
@@ -172,6 +176,51 @@
         </section>
       </section>
 
+      <section id="aiView" class="view">
+        <div class="section-row">
+          <div>
+            <p class="eyebrow" data-i18n="aiStudio">AI STUDIO</p>
+            <h2 data-i18n="aiTitle">Image generator</h2>
+          </div>
+          <span class="status-pill" data-i18n="freeNoToken">No token</span>
+        </div>
+
+        <section class="panel">
+          <label class="input-label" for="aiPromptInput" data-i18n="aiPrompt">Prompt</label>
+          <textarea
+            id="aiPromptInput"
+            class="text-area"
+            maxlength="420"
+            data-i18n-placeholder="aiPromptPlaceholder"
+            placeholder="A product photo with the selected color palette"
+          ></textarea>
+          <div class="ai-tools">
+            <button id="useSelectedColorButton" class="secondary-button full" type="button" data-i18n="useSelectedColor">
+              Use selected color
+            </button>
+            <button id="generateImageButton" class="primary-button full" type="button" data-i18n="generateImage">
+              Generate image
+            </button>
+          </div>
+          <p id="aiStatusText" class="status-text" data-i18n="aiReady">
+            Free image generation uses Pollinations without an API key.
+          </p>
+        </section>
+
+        <section class="panel ai-preview-panel">
+          <div class="section-row">
+            <h2 data-i18n="aiResult">Result</h2>
+            <a id="openGeneratedImageLink" class="text-button link-button is-disabled" href="#" target="_blank" rel="noreferrer" data-i18n="openImage">
+              Open
+            </a>
+          </div>
+          <div class="ai-image-frame">
+            <img id="generatedImage" alt="" />
+            <span id="aiImagePlaceholder" data-i18n="aiImagePlaceholder">Your generated image will appear here.</span>
+          </div>
+        </section>
+      </section>
+
       <section id="deviceView" class="view">
         <div class="section-row">
           <div>
@@ -234,6 +283,10 @@
         <button class="nav-button" type="button" data-view="formula">
           <span>M</span>
           <small data-i18n="navMix">Mix</small>
+        </button>
+        <button class="nav-button" type="button" data-view="ai">
+          <span>AI</span>
+          <small data-i18n="navAI">AI</small>
         </button>
         <button class="nav-button" type="button" data-view="device">
           <span>D</span>

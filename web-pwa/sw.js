@@ -1,4 +1,4 @@
-const CACHE_NAME = 'find-color-pwa-v6';
+const CACHE_NAME = 'find-color-pwa-v7';
 const ASSETS = [
   './',
   './index.html',
@@ -24,6 +24,11 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
+    return;
+  }
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) {
     return;
   }
 

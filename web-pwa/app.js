@@ -12,6 +12,7 @@ const translations = {
     homeCopy: 'Olculen renkleri kaydet, galeride gez ve mililitreye gore demo pigment oranlarini hesapla.',
     openCamera: 'Kamerayi Ac',
     openGallery: 'Galeri',
+    openAI: 'AI Gorsel',
     savedColors: 'Kayitli renkler',
     selectedColor: 'Secili',
     latestColors: 'Son renkler',
@@ -19,6 +20,7 @@ const translations = {
     topMeasure: 'Olc',
     topGallery: 'Galeri',
     topFormation: 'Olusum',
+    topAI: 'AI',
     topDevice: 'Cihaz',
     liveCamera: 'CANLI KAMERA',
     centerSampling: 'Merkez olcum',
@@ -55,6 +57,7 @@ const translations = {
     navCamera: 'Kamera',
     navGallery: 'Galeri',
     navMix: 'Karisim',
+    navAI: 'AI',
     navDevice: 'Cihaz',
     navProfile: 'Profil',
     noColors: 'Henuz renk kaydedilmedi.',
@@ -75,6 +78,21 @@ const translations = {
     demoConnected: 'Demo cihaz baglandi.',
     recipeSent: 'Demo paket hazirlandi. Gercek cihaza gonderim simule edildi.',
     clearConfirm: 'Tum kayitli renkler silinsin mi?',
+    aiStudio: 'AI STUDYO',
+    aiTitle: 'Gorsel uretici',
+    freeNoToken: 'Token yok',
+    aiPrompt: 'Prompt',
+    aiPromptPlaceholder: 'Secili renk paletiyle modern bir urun fotografi',
+    useSelectedColor: 'Secili rengi kullan',
+    generateImage: 'Gorsel uret',
+    aiReady: 'Ucretsiz gorsel uretimi API anahtari olmadan Pollinations ile calisir.',
+    aiPromptRequired: 'Once bir prompt yaz.',
+    aiGenerating: 'Gorsel uretiliyor...',
+    aiGenerated: 'Gorsel hazir.',
+    aiFailed: 'Gorsel uretilirken hata olustu.',
+    aiResult: 'Sonuc',
+    openImage: 'Ac',
+    aiImagePlaceholder: 'Uretilen gorsel burada gorunecek.',
   },
   en: {
     appMode: 'Mobile color studio',
@@ -82,6 +100,7 @@ const translations = {
     homeCopy: 'Save measured colors, browse your gallery, and calculate demo pigment ratios by milliliter.',
     openCamera: 'Open Camera',
     openGallery: 'Gallery',
+    openAI: 'AI Image',
     savedColors: 'Saved colors',
     selectedColor: 'Selected',
     latestColors: 'Latest colors',
@@ -89,6 +108,7 @@ const translations = {
     topMeasure: 'Measure',
     topGallery: 'Gallery',
     topFormation: 'Formation',
+    topAI: 'AI',
     topDevice: 'Device',
     liveCamera: 'LIVE CAMERA',
     centerSampling: 'Center sampling',
@@ -125,6 +145,7 @@ const translations = {
     navCamera: 'Camera',
     navGallery: 'Gallery',
     navMix: 'Mix',
+    navAI: 'AI',
     navDevice: 'Device',
     navProfile: 'Profile',
     noColors: 'No saved colors yet.',
@@ -145,6 +166,21 @@ const translations = {
     demoConnected: 'Demo device connected.',
     recipeSent: 'Demo packet prepared. Real device transfer was simulated.',
     clearConfirm: 'Delete all saved colors?',
+    aiStudio: 'AI STUDIO',
+    aiTitle: 'Image generator',
+    freeNoToken: 'No token',
+    aiPrompt: 'Prompt',
+    aiPromptPlaceholder: 'A modern product photo using the selected color palette',
+    useSelectedColor: 'Use selected color',
+    generateImage: 'Generate image',
+    aiReady: 'Free image generation uses Pollinations without an API key.',
+    aiPromptRequired: 'Write a prompt first.',
+    aiGenerating: 'Generating image...',
+    aiGenerated: 'Image is ready.',
+    aiFailed: 'The image could not be generated.',
+    aiResult: 'Result',
+    openImage: 'Open',
+    aiImagePlaceholder: 'Your generated image will appear here.',
   },
 };
 
@@ -239,6 +275,14 @@ const workspaceInput = document.querySelector('#workspaceInput');
 const saveProfileButton = document.querySelector('#saveProfileButton');
 const welcomeTitle = document.querySelector('#welcomeTitle');
 const themePalette = document.querySelector('#themePalette');
+const aiPromptInput = document.querySelector('#aiPromptInput');
+const useSelectedColorButton = document.querySelector('#useSelectedColorButton');
+const generateImageButton = document.querySelector('#generateImageButton');
+const aiStatusText = document.querySelector('#aiStatusText');
+const generatedImage = document.querySelector('#generatedImage');
+const aiImagePlaceholder = document.querySelector('#aiImagePlaceholder');
+const openGeneratedImageLink = document.querySelector('#openGeneratedImageLink');
+const aiImageFrame = document.querySelector('.ai-image-frame');
 const context = canvas.getContext('2d', { willReadFrequently: true });
 
 const measurementSize = 50;
@@ -308,7 +352,11 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n]').forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
   setStatus(t('cameraPrompt'));
+  setAIStatus(t('aiReady'));
   renderAll();
 }
 
@@ -495,6 +543,82 @@ function buildCameraErrorMessage(error) {
 
   const detail = error?.message || name;
   return detail ? `${t('cameraFailed')}: ${detail}` : t('cameraFailed');
+}
+
+function setAIStatus(message, isError = false) {
+  aiStatusText.textContent = message;
+  aiStatusText.classList.toggle('is-error', isError);
+}
+
+function applySelectedColorToPrompt() {
+  if (!selectedColor) {
+    setAIStatus(t('selectColorFirst'), true);
+    return;
+  }
+
+  const colorName = getColorName(selectedColor, t('savedColor'));
+  aiPromptInput.value =
+    settings.language === 'tr'
+      ? `${colorName} ${selectedColor.hex} renk paletiyle temiz isikli modern urun fotografi`
+      : `Clean modern product photo with a ${colorName} ${selectedColor.hex} color palette`;
+  setAIStatus(t('aiReady'));
+}
+
+function buildAIImageUrl(prompt) {
+  const params = new URLSearchParams({
+    width: '768',
+    height: '768',
+    model: 'flux',
+    private: 'true',
+    safe: 'true',
+    nologo: 'true',
+    seed: String(Date.now() % 1000000000),
+    referrer: 'find-color-pwa',
+  });
+
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params.toString()}`;
+}
+
+function generateAIImage() {
+  const prompt = aiPromptInput.value.trim();
+
+  if (!prompt) {
+    setAIStatus(t('aiPromptRequired'), true);
+    aiPromptInput.focus();
+    return;
+  }
+
+  const colorHint = selectedColor
+    ? `, color palette ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
+    : '';
+  const imageUrl = buildAIImageUrl(`${prompt}${colorHint}`);
+
+  generateImageButton.disabled = true;
+  openGeneratedImageLink.href = '#';
+  openGeneratedImageLink.classList.add('is-disabled');
+  aiImageFrame.classList.remove('has-image');
+  aiImagePlaceholder.textContent = t('aiGenerating');
+  setAIStatus(t('aiGenerating'));
+
+  generatedImage.onload = () => {
+    generateImageButton.disabled = false;
+    aiImageFrame.classList.add('has-image');
+    openGeneratedImageLink.href = imageUrl;
+    openGeneratedImageLink.classList.remove('is-disabled');
+    setAIStatus(t('aiGenerated'));
+  };
+
+  generatedImage.onerror = () => {
+    generateImageButton.disabled = false;
+    aiImageFrame.classList.remove('has-image');
+    openGeneratedImageLink.href = '#';
+    openGeneratedImageLink.classList.add('is-disabled');
+    aiImagePlaceholder.textContent = t('aiImagePlaceholder');
+    setAIStatus(t('aiFailed'), true);
+  };
+
+  generatedImage.alt = prompt;
+  generatedImage.src = imageUrl;
 }
 
 function saveLiveColor() {
@@ -765,6 +889,13 @@ document.querySelectorAll('.nav-button').forEach((button) => {
 startButton.addEventListener('click', startCamera);
 retryButton.addEventListener('click', startCamera);
 measureButton.addEventListener('click', saveLiveColor);
+useSelectedColorButton.addEventListener('click', applySelectedColorToPrompt);
+generateImageButton.addEventListener('click', generateAIImage);
+aiPromptInput.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+    generateAIImage();
+  }
+});
 mlInput.addEventListener('input', renderFormula);
 deviceMlInput.addEventListener('input', () => {});
 
