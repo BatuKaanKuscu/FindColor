@@ -82,8 +82,8 @@ const translations = {
     aiTitle: 'Gorsel uretici',
     freeNoToken: 'Token yok',
     aiPrompt: 'Prompt',
-    aiPromptPlaceholder: 'Secili renk paletiyle modern bir urun fotografi',
-    useSelectedColor: 'Secili rengi kullan',
+    aiPromptPlaceholder: 'Cekilen fotografin icindeki grafitinin kapatilmis halini goster',
+    useSelectedColor: 'Rengi kapatma icin kullan',
     generateImage: 'Gorsel uret',
     aiReady: 'Ucretsiz gorsel uretimi API anahtari olmadan Pollinations ile calisir.',
     aiPromptRequired: 'Once bir prompt yaz.',
@@ -170,8 +170,8 @@ const translations = {
     aiTitle: 'Image generator',
     freeNoToken: 'No token',
     aiPrompt: 'Prompt',
-    aiPromptPlaceholder: 'A modern product photo using the selected color palette',
-    useSelectedColor: 'Use selected color',
+    aiPromptPlaceholder: 'Show the graffiti in the captured photo covered over',
+    useSelectedColor: 'Use color to cover',
     generateImage: 'Generate image',
     aiReady: 'Free image generation uses Pollinations without an API key.',
     aiPromptRequired: 'Write a prompt first.',
@@ -559,8 +559,8 @@ function applySelectedColorToPrompt() {
   const colorName = getColorName(selectedColor, t('savedColor'));
   aiPromptInput.value =
     settings.language === 'tr'
-      ? `${colorName} ${selectedColor.hex} renk paletiyle temiz isikli modern urun fotografi`
-      : `Clean modern product photo with a ${colorName} ${selectedColor.hex} color palette`;
+      ? `Cekilen fotografin icindeki grafitinin ${colorName} ${selectedColor.hex} boya ile kapatilmis halini goster`
+      : `Show the graffiti in the captured photo covered over with ${colorName} ${selectedColor.hex} paint`;
   setAIStatus(t('aiReady'));
 }
 
@@ -589,7 +589,7 @@ function generateAIImage() {
   }
 
   const colorHint = selectedColor
-    ? `, color palette ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
+    ? `, covered with paint color ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
     : '';
   const imageUrl = buildAIImageUrl(`${prompt}${colorHint}`);
 
