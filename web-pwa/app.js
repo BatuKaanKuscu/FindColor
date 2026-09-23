@@ -78,6 +78,8 @@ const translations = {
     demoConnected: 'Demo cihaz baglandi.',
     recipeSent: 'Demo paket hazirlandi. Gercek cihaza gonderim simule edildi.',
     clearConfirm: 'Tum kayitli renkler silinsin mi?',
+    deleteColor: 'Sil',
+    deleteColorConfirm: 'Bu renk silinsin mi?',
     aiStudio: 'AI STUDYO',
     aiTitle: 'Gorsel uretici',
     freeNoToken: 'Token yok',
@@ -174,6 +176,8 @@ const translations = {
     demoConnected: 'Demo device connected.',
     recipeSent: 'Demo packet prepared. Real device transfer was simulated.',
     clearConfirm: 'Delete all saved colors?',
+    deleteColor: 'Delete',
+    deleteColorConfirm: 'Delete this color?',
     aiStudio: 'AI STUDIO',
     aiTitle: 'Image generator',
     freeNoToken: 'No token',
@@ -1000,7 +1004,7 @@ function renderGallery() {
   }
 
   colors.forEach((color) => {
-    savedGalleryGrid.append(createGalleryCard(color, getColorName(color, t('savedColor'))));
+    savedGalleryGrid.append(createGalleryCard(color, getColorName(color, t('savedColor')), true));
   });
 
   catalogColors.forEach((color) => {
@@ -1008,19 +1012,60 @@ function renderGallery() {
   });
 }
 
-function createGalleryCard(color, title) {
-  const card = document.createElement('button');
+function createGalleryCard(color, title, canDelete = false) {
+  const card = document.createElement('article');
   card.className = 'gallery-card';
-  card.type = 'button';
+  card.role = 'button';
+  card.tabIndex = 0;
   card.innerHTML = `
     <div class="gallery-swatch" style="--swatch: ${color.hex}"></div>
-    <strong>${title}</strong>
+    <div class="gallery-card-title">
+      <strong>${title}</strong>
+      ${
+        canDelete
+          ? `<button class="delete-color-button" type="button" aria-label="${t('deleteColor')} ${color.hex}">${t('deleteColor')}</button>`
+          : ''
+      }
+    </div>
     <span>${color.hex}</span>
     <span>RGB ${color.red}, ${color.green}, ${color.blue}</span>
     <em>${t('topFormation')}</em>
   `;
   card.addEventListener('click', () => selectColor(color));
+  card.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      selectColor(color);
+    }
+  });
+
+  card.querySelector('.delete-color-button')?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    deleteSavedColor(color);
+  });
+
   return card;
+}
+
+function deleteSavedColor(colorToDelete) {
+  if (!window.confirm(t('deleteColorConfirm'))) {
+    return;
+  }
+
+  colors = colors.filter((color) =>
+    colorToDelete.id ? color.id !== colorToDelete.id : color !== colorToDelete,
+  );
+
+  if (
+    (colorToDelete.id && selectedColor?.id === colorToDelete.id) ||
+    selectedColor === colorToDelete
+  ) {
+    selectedColor = colors[0] || null;
+  }
+
+  writeJson(storageKeys.colors, colors);
+  writeJson(storageKeys.selectedColor, selectedColor);
+  renderAll();
 }
 
 function renderFormula() {

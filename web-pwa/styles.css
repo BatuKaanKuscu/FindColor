@@ -68,6 +68,8 @@ button {
 }
 
 .header-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -205,6 +207,11 @@ h2 {
 
 .small-button.danger {
   color: var(--danger);
+}
+
+.ai-header-button {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 .icon-button {
@@ -467,6 +474,7 @@ h2 {
 }
 
 .gallery-card {
+  cursor: pointer;
   padding: 10px;
   text-align: left;
   color: var(--text);
@@ -479,14 +487,34 @@ h2 {
   background: var(--swatch);
 }
 
+.gallery-card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 .gallery-card strong,
 .gallery-card span {
   display: block;
 }
 
 .gallery-card strong {
-  margin-top: 10px;
+  min-width: 0;
   font-size: 17px;
+}
+
+.delete-color-button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 999px;
+  background: rgb(255 180 171 / 12%);
+  color: var(--danger);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .gallery-card span {
