@@ -83,10 +83,18 @@ const translations = {
     freeNoToken: 'Token yok',
     aiPrompt: 'Prompt',
     aiPromptPlaceholder: 'Cekilen fotografin icindeki grafitinin kapatilmis halini goster',
+    aiCameraPrompt: 'AI kamerayi ac ve grafitili alanin tamamini kadraja al.',
+    startAICamera: 'AI kamerayi ac',
+    captureAndSendAI: 'Fotografi AI a gonder',
     useSelectedColor: 'Rengi kapatma icin kullan',
     generateImage: 'Gorsel uret',
     aiReady: 'Ucretsiz gorsel uretimi API anahtari olmadan Pollinations ile calisir.',
     aiPromptRequired: 'Once bir prompt yaz.',
+    aiCameraStarting: 'AI kamerasi aciliyor...',
+    aiCameraReady: 'Kareyi hazirla, sonra fotografi AI a gonder.',
+    aiPhotoRequired: 'Once AI kamerayi ac.',
+    aiPhotoCaptured: 'Fotograf yakalandi, AI fotografin tamamini inceliyor...',
+    aiVisionFailed: 'Fotograf AI tarafindan okunamadi.',
     aiGenerating: 'Gorsel uretiliyor...',
     aiGenerated: 'Gorsel hazir.',
     aiFailed: 'Gorsel uretilirken hata olustu.',
@@ -171,10 +179,18 @@ const translations = {
     freeNoToken: 'No token',
     aiPrompt: 'Prompt',
     aiPromptPlaceholder: 'Show the graffiti in the captured photo covered over',
+    aiCameraPrompt: 'Open the AI camera and frame the full graffiti photo.',
+    startAICamera: 'Open AI camera',
+    captureAndSendAI: 'Send photo to AI',
     useSelectedColor: 'Use color to cover',
     generateImage: 'Generate image',
     aiReady: 'Free image generation uses Pollinations without an API key.',
     aiPromptRequired: 'Write a prompt first.',
+    aiCameraStarting: 'Opening AI camera...',
+    aiCameraReady: 'Frame the shot, then send the photo to AI.',
+    aiPhotoRequired: 'Open the AI camera first.',
+    aiPhotoCaptured: 'Photo captured. AI is reading the full photo...',
+    aiVisionFailed: 'AI could not read the photo.',
     aiGenerating: 'Generating image...',
     aiGenerated: 'Image is ready.',
     aiFailed: 'The image could not be generated.',
@@ -275,6 +291,12 @@ const workspaceInput = document.querySelector('#workspaceInput');
 const saveProfileButton = document.querySelector('#saveProfileButton');
 const welcomeTitle = document.querySelector('#welcomeTitle');
 const themePalette = document.querySelector('#themePalette');
+const aiCameraFeed = document.querySelector('#aiCameraFeed');
+const aiCaptureCanvas = document.querySelector('#aiCaptureCanvas');
+const capturedAIPhoto = document.querySelector('#capturedAIPhoto');
+const aiCameraPlaceholder = document.querySelector('#aiCameraPlaceholder');
+const startAICameraButton = document.querySelector('#startAICameraButton');
+const captureAIPhotoButton = document.querySelector('#captureAIPhotoButton');
 const aiPromptInput = document.querySelector('#aiPromptInput');
 const useSelectedColorButton = document.querySelector('#useSelectedColorButton');
 const generateImageButton = document.querySelector('#generateImageButton');
@@ -290,6 +312,7 @@ const sampleStep = 2;
 const analysisIntervalMs = 400;
 
 let stream = null;
+let aiStream = null;
 let analysisTimer = null;
 let liveColor = null;
 let deviceConnected = false;
@@ -343,6 +366,10 @@ function setView(viewName) {
 
   if (viewName !== 'camera') {
     stopCamera();
+  }
+
+  if (viewName !== 'ai') {
+    stopAICamera();
   }
 }
 
@@ -431,6 +458,7 @@ function stopCamera() {
 
 async function startCamera() {
   stopCamera();
+  stopAICamera();
 
   if (!navigator.mediaDevices?.getUserMedia) {
     setStatus(t('cameraUnsupported'), true);
@@ -467,6 +495,93 @@ async function startCamera() {
   } finally {
     startButton.disabled = false;
   }
+}
+
+function stopAICamera() {
+  if (aiStream) {
+    aiStream.getTracks().forEach((track) => track.stop());
+    aiStream = null;
+  }
+
+  aiCameraFeed.pause();
+  aiCameraFeed.srcObject = null;
+  aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
+}
+
+async function startAICamera() {
+  stopCamera();
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setAIStatus(t('cameraUnsupported'), true);
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    setAIStatus(t('cameraNeedsSecureContext'), true);
+    return;
+  }
+
+  try {
+    startAICameraButton.disabled = true;
+    captureAIPhotoButton.disabled = true;
+    setAIStatus(t('aiCameraStarting'));
+    aiStream = await requestCameraStream();
+
+    aiCameraFeed.setAttribute('playsinline', '');
+    aiCameraFeed.setAttribute('autoplay', '');
+    aiCameraFeed.muted = true;
+    aiCameraFeed.playsInline = true;
+    aiCameraFeed.srcObject = aiStream;
+    await waitForAIVideoMetadata();
+    await aiCameraFeed.play();
+
+    capturedAIPhoto.removeAttribute('src');
+    aiCameraFeed.closest('.ai-camera-frame').classList.add('has-camera');
+    aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-capture');
+    setAIStatus(t('aiCameraReady'));
+  } catch (error) {
+    stopAICamera();
+    setAIStatus(buildCameraErrorMessage(error), true);
+  } finally {
+    startAICameraButton.disabled = false;
+    captureAIPhotoButton.disabled = false;
+  }
+}
+
+function waitForAIVideoMetadata() {
+  if (aiCameraFeed.videoWidth && aiCameraFeed.videoHeight) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(resolve, 1500);
+    aiCameraFeed.addEventListener(
+      'loadedmetadata',
+      () => {
+        window.clearTimeout(timeout);
+        resolve();
+      },
+      { once: true },
+    );
+  });
+}
+
+function captureAIPhotoDataUrl() {
+  if (!aiStream || !aiCameraFeed.videoWidth || !aiCameraFeed.videoHeight) {
+    throw new Error(t('aiPhotoRequired'));
+  }
+
+  const maxSize = 768;
+  const ratio = Math.min(maxSize / aiCameraFeed.videoWidth, maxSize / aiCameraFeed.videoHeight, 1);
+  const width = Math.round(aiCameraFeed.videoWidth * ratio);
+  const height = Math.round(aiCameraFeed.videoHeight * ratio);
+  const context2d = aiCaptureCanvas.getContext('2d', { willReadFrequently: true });
+
+  aiCaptureCanvas.width = width;
+  aiCaptureCanvas.height = height;
+  context2d.drawImage(aiCameraFeed, 0, 0, width, height);
+
+  return aiCaptureCanvas.toDataURL('image/jpeg', 0.82);
 }
 
 async function requestCameraStream() {
@@ -579,6 +694,12 @@ function buildAIImageUrl(prompt) {
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params.toString()}`;
 }
 
+function getSelectedColorHint() {
+  return selectedColor
+    ? `, covered with paint color ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
+    : '';
+}
+
 function generateAIImage() {
   const prompt = aiPromptInput.value.trim();
 
@@ -588,12 +709,13 @@ function generateAIImage() {
     return;
   }
 
-  const colorHint = selectedColor
-    ? `, covered with paint color ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
-    : '';
-  const imageUrl = buildAIImageUrl(`${prompt}${colorHint}`);
+  renderGeneratedAIImage(`${prompt}${getSelectedColorHint()}`, prompt);
+}
 
+function renderGeneratedAIImage(generationPrompt, altText) {
+  const imageUrl = buildAIImageUrl(generationPrompt);
   generateImageButton.disabled = true;
+  captureAIPhotoButton.disabled = true;
   openGeneratedImageLink.href = '#';
   openGeneratedImageLink.classList.add('is-disabled');
   aiImageFrame.classList.remove('has-image');
@@ -602,6 +724,7 @@ function generateAIImage() {
 
   generatedImage.onload = () => {
     generateImageButton.disabled = false;
+    captureAIPhotoButton.disabled = false;
     aiImageFrame.classList.add('has-image');
     openGeneratedImageLink.href = imageUrl;
     openGeneratedImageLink.classList.remove('is-disabled');
@@ -610,6 +733,7 @@ function generateAIImage() {
 
   generatedImage.onerror = () => {
     generateImageButton.disabled = false;
+    captureAIPhotoButton.disabled = false;
     aiImageFrame.classList.remove('has-image');
     openGeneratedImageLink.href = '#';
     openGeneratedImageLink.classList.add('is-disabled');
@@ -617,8 +741,95 @@ function generateAIImage() {
     setAIStatus(t('aiFailed'), true);
   };
 
-  generatedImage.alt = prompt;
+  generatedImage.alt = altText || generationPrompt;
   generatedImage.src = imageUrl;
+}
+
+async function buildGraffitiCoverPromptFromPhoto(imageDataUrl) {
+  const colorInstruction = selectedColor
+    ? `Use ${selectedColor.hex} paint as the cover color where appropriate.`
+    : 'Use a realistic clean wall or matching paint color where appropriate.';
+
+  const payload = {
+    model: 'openai',
+    private: true,
+    referrer: 'find-color-pwa',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'text',
+            text: [
+              'Look at the full photo. Write one concise English image-generation prompt.',
+              'The prompt must preserve the same camera angle, wall, lighting, environment, and composition.',
+              'The result should show the graffiti covered over with paint, clean and realistic, with no visible graffiti text.',
+              colorInstruction,
+              'Return only the prompt. No quotes, no explanation.',
+            ].join(' '),
+          },
+          {
+            type: 'image_url',
+            image_url: {
+              url: imageDataUrl,
+            },
+          },
+        ],
+      },
+    ],
+  };
+
+  const response = await fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const result = await response.json();
+  return result?.choices?.[0]?.message?.content?.trim() || '';
+}
+
+async function captureAndGenerateAIPhoto() {
+  let imageDataUrl;
+
+  try {
+    imageDataUrl = captureAIPhotoDataUrl();
+  } catch (error) {
+    setAIStatus(error.message || t('aiPhotoRequired'), true);
+    return;
+  }
+
+  capturedAIPhoto.src = imageDataUrl;
+  capturedAIPhoto.alt = t('captureAndSendAI');
+  aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
+  aiCameraFeed.closest('.ai-camera-frame').classList.add('has-capture');
+
+  try {
+    startAICameraButton.disabled = true;
+    captureAIPhotoButton.disabled = true;
+    generateImageButton.disabled = true;
+    setAIStatus(t('aiPhotoCaptured'));
+
+    const prompt = await buildGraffitiCoverPromptFromPhoto(imageDataUrl);
+    if (!prompt) {
+      throw new Error(t('aiVisionFailed'));
+    }
+
+    aiPromptInput.value = prompt;
+    renderGeneratedAIImage(`${prompt}${getSelectedColorHint()}`, prompt);
+  } catch (error) {
+    setAIStatus(`${t('aiVisionFailed')} ${error.message || ''}`.trim(), true);
+    captureAIPhotoButton.disabled = false;
+    generateImageButton.disabled = false;
+  } finally {
+    startAICameraButton.disabled = false;
+  }
 }
 
 function saveLiveColor() {
@@ -889,6 +1100,8 @@ document.querySelectorAll('.nav-button').forEach((button) => {
 startButton.addEventListener('click', startCamera);
 retryButton.addEventListener('click', startCamera);
 measureButton.addEventListener('click', saveLiveColor);
+startAICameraButton.addEventListener('click', startAICamera);
+captureAIPhotoButton.addEventListener('click', captureAndGenerateAIPhoto);
 useSelectedColorButton.addEventListener('click', applySelectedColorToPrompt);
 generateImageButton.addEventListener('click', generateAIImage);
 aiPromptInput.addEventListener('keydown', (event) => {
@@ -961,7 +1174,10 @@ saveProfileButton.addEventListener('click', () => {
   deviceLog.textContent = t('profileSaved');
 });
 
-window.addEventListener('pagehide', stopCamera);
+window.addEventListener('pagehide', () => {
+  stopCamera();
+  stopAICamera();
+});
 
 applyTheme();
 applyLanguage();

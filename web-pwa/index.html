@@ -186,6 +186,23 @@
         </div>
 
         <section class="panel">
+          <div class="ai-camera-frame">
+            <video id="aiCameraFeed" autoplay muted playsinline></video>
+            <canvas id="aiCaptureCanvas" width="768" height="768" aria-hidden="true"></canvas>
+            <img id="capturedAIPhoto" alt="" />
+            <span id="aiCameraPlaceholder" data-i18n="aiCameraPrompt">Open the AI camera and frame the full graffiti photo.</span>
+          </div>
+          <div class="ai-tools">
+            <button id="startAICameraButton" class="secondary-button full" type="button" data-i18n="startAICamera">
+              Open AI camera
+            </button>
+            <button id="captureAIPhotoButton" class="primary-button full" type="button" data-i18n="captureAndSendAI">
+              Send photo to AI
+            </button>
+          </div>
+        </section>
+
+        <section class="panel">
           <label class="input-label" for="aiPromptInput" data-i18n="aiPrompt">Prompt</label>
           <textarea
             id="aiPromptInput"

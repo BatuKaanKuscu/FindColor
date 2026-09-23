@@ -165,7 +165,7 @@ Apple Developer hesabi olmadan iPhone'da uygulama benzeri deneyim icin repo icin
 
 Bu surum Safari uzerinden kamera izni ister, merkez 50x50 piksel alanini analiz eder, RGB/HEX sonucunu gosterir ve ana ekrana eklenebilir.
 
-PWA surumunde AI Gorsel sekmesi de vardir. Bu sekme, API key veya proje token'i kullanmadan Pollinations image endpoint'i ile prompt'tan gorsel uretir. Isteklerde `private=true` ve `safe=true` parametreleri kullanilir; servis internet baglantisi ve public rate limitlerine baglidir.
+PWA surumunde AI Gorsel sekmesi de vardir. Bu sekme, API key veya proje token'i kullanmadan Pollinations image endpoint'i ile prompt'tan gorsel uretir. AI kamera akisi fotografi base64 olarak Pollinations vision endpoint'ine gonderir, grafitinin kapatilmis halini tarif eden prompt uretir ve sonucu ekranda gosterir. Isteklerde `private=true` ve `safe=true` parametreleri kullanilir; servis internet baglantisi ve public rate limitlerine baglidir.
 
 Render ayarlari:
 

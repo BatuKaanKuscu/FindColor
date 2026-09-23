@@ -542,6 +542,52 @@ h2 {
   gap: 10px;
 }
 
+.ai-camera-frame {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0b0d10;
+}
+
+.ai-camera-frame video,
+.ai-camera-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ai-camera-frame img,
+.ai-camera-frame video,
+.ai-camera-frame.has-camera span,
+.ai-camera-frame.has-capture span {
+  display: none;
+}
+
+.ai-camera-frame.has-camera video,
+.ai-camera-frame.has-capture img {
+  display: block;
+}
+
+#aiCaptureCanvas {
+  display: none;
+}
+
+.ai-camera-frame span {
+  max-width: 240px;
+  padding: 18px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 .ai-preview-panel {
   padding-bottom: 18px;
 }
