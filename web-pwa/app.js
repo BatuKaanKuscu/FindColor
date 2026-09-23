@@ -94,12 +94,15 @@ const translations = {
     aiPhotoRequired: 'Once AI kamerayi ac.',
     aiPhotoCaptured: 'Fotograf yakalandi, AI fotografin tamamini inceliyor...',
     aiVisionFailed: 'Fotograf AI tarafindan okunamadi.',
+    aiModelLoading: 'Ucretsiz duvar duzenleme modeli indiriliyor. Ilk acilista biraz surebilir...',
+    aiInpainting: 'AI duvar dokusunu yeniden olusturuyor...',
+    aiModelFailed: 'Ucretsiz duzenleme modeli yuklenemedi.',
     aiGenerating: 'Gorsel uretiliyor...',
-    aiGenerated: 'Ayni fotograf korunarak grafiti kapatildi.',
+    aiGenerated: 'Fotograf AI ile duvar dokusu korunarak duzenlendi.',
     aiFailed: 'Gorsel uretilirken hata olustu.',
     aiResult: 'Sonuc',
     openImage: 'Ac',
-    aiImagePlaceholder: 'Uretilen gorsel burada gorunecek.',
+    aiImagePlaceholder: 'Duzenlenmis fotograf burada gorunecek.',
   },
   en: {
     appMode: 'Mobile color studio',
@@ -189,12 +192,15 @@ const translations = {
     aiPhotoRequired: 'Open the AI camera first.',
     aiPhotoCaptured: 'Photo captured. AI is reading the full photo...',
     aiVisionFailed: 'AI could not read the photo.',
+    aiModelLoading: 'Loading the free wall editing model. The first load may take a moment...',
+    aiInpainting: 'AI is reconstructing the wall texture...',
+    aiModelFailed: 'The free editing model could not be loaded.',
     aiGenerating: 'Generating image...',
-    aiGenerated: 'The original photo was preserved and the graffiti was covered.',
+    aiGenerated: 'The photo was edited with AI while preserving the wall texture.',
     aiFailed: 'The image could not be generated.',
     aiResult: 'Result',
     openImage: 'Open',
-    aiImagePlaceholder: 'Your generated image will appear here.',
+    aiImagePlaceholder: 'Your edited photo will appear here.',
   },
 };
 
@@ -307,12 +313,15 @@ const context = canvas.getContext('2d', { willReadFrequently: true });
 const measurementSize = 50;
 const sampleStep = 2;
 const analysisIntervalMs = 400;
+const lamaModelUrl = 'https://huggingface.co/g-ronimo/lama/resolve/main/lama_512_int8.onnx';
+const lamaInputSize = 512;
 
 let stream = null;
 let aiStream = null;
 let analysisTimer = null;
 let liveColor = null;
 let deviceConnected = false;
+let lamaSessionPromise = null;
 
 let colors = readJson(storageKeys.colors, []);
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
@@ -754,19 +763,6 @@ function normalizeHex(value) {
   return match ? `#${match[1].toUpperCase()}` : null;
 }
 
-function hexToRgb(hex) {
-  const normalized = normalizeHex(hex);
-  if (!normalized) {
-    return null;
-  }
-
-  return [
-    Number.parseInt(normalized.slice(1, 3), 16),
-    Number.parseInt(normalized.slice(3, 5), 16),
-    Number.parseInt(normalized.slice(5, 7), 16),
-  ];
-}
-
 function renderAIDetectedColors(colors, coverColor) {
   const palette = [...(colors || [])];
 
@@ -835,55 +831,159 @@ function clampRegion(region) {
   };
 }
 
-function getCoverColor(context2d, width, height, region, coverColor) {
-  if (selectedColor) {
-    return [selectedColor.red, selectedColor.green, selectedColor.blue];
+function getLamaSession() {
+  if (!globalThis.ort) {
+    return Promise.reject(new Error(t('aiModelFailed')));
   }
 
-  const aiCoverColor = hexToRgb(coverColor?.hex);
-  if (aiCoverColor) {
-    return aiCoverColor;
+  if (!lamaSessionPromise) {
+    globalThis.ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
+    lamaSessionPromise = (async () => {
+      try {
+        return await globalThis.ort.InferenceSession.create(lamaModelUrl, {
+          executionProviders: globalThis.navigator?.gpu ? ['webgpu', 'wasm'] : ['wasm'],
+          graphOptimizationLevel: 'all',
+        });
+      } catch (error) {
+        if (!globalThis.navigator?.gpu) {
+          throw error;
+        }
+
+        return globalThis.ort.InferenceSession.create(lamaModelUrl, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'all',
+        });
+      }
+    })().catch((error) => {
+      lamaSessionPromise = null;
+      throw error;
+    });
   }
 
-  const x = Math.round(region.x * width);
-  const y = Math.round(region.y * height);
-  const regionWidth = Math.max(1, Math.round(region.width * width));
-  const regionHeight = Math.max(1, Math.round(region.height * height));
-  const samplePoints = [
-    [Math.max(0, x - Math.round(regionWidth * 0.12)), y + Math.round(regionHeight * 0.15)],
-    [Math.min(width - 1, x + regionWidth + Math.round(regionWidth * 0.12)), y + Math.round(regionHeight * 0.15)],
-    [x + Math.round(regionWidth * 0.15), Math.max(0, y - Math.round(regionHeight * 0.12))],
-    [x + Math.round(regionWidth * 0.15), Math.min(height - 1, y + regionHeight + Math.round(regionHeight * 0.12))],
-  ];
-  const pixels = samplePoints.map(([sampleX, sampleY]) => context2d.getImageData(sampleX, sampleY, 1, 1).data);
-  return pixels
-    .reduce((sum, pixel) => sum.map((value, index) => value + pixel[index]), [0, 0, 0])
-    .map((value) => Math.round(value / pixels.length));
+  return lamaSessionPromise;
 }
 
-async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion, coverColor) {
+function getInpaintCrop(image, graffitiRegion) {
+  const imageWidth = image.naturalWidth || image.width;
+  const imageHeight = image.naturalHeight || image.height;
+  const region = clampRegion(graffitiRegion);
+  const graffitiX = region.x * imageWidth;
+  const graffitiY = region.y * imageHeight;
+  const graffitiWidth = region.width * imageWidth;
+  const graffitiHeight = region.height * imageHeight;
+  const side = Math.min(
+    Math.min(imageWidth, imageHeight),
+    Math.max(graffitiWidth, graffitiHeight) * 2.4,
+  );
+  const centerX = graffitiX + graffitiWidth / 2;
+  const centerY = graffitiY + graffitiHeight / 2;
+
+  return {
+    x: Math.max(0, Math.min(imageWidth - side, centerX - side / 2)),
+    y: Math.max(0, Math.min(imageHeight - side, centerY - side / 2)),
+    side,
+    region,
+  };
+}
+
+function buildLamaInput(image, crop) {
+  const cropCanvas = document.createElement('canvas');
+  cropCanvas.width = lamaInputSize;
+  cropCanvas.height = lamaInputSize;
+  const cropContext = cropCanvas.getContext('2d', { willReadFrequently: true });
+  cropContext.drawImage(image, crop.x, crop.y, crop.side, crop.side, 0, 0, lamaInputSize, lamaInputSize);
+
+  const pixels = cropContext.getImageData(0, 0, lamaInputSize, lamaInputSize).data;
+  const input = new Float32Array(4 * lamaInputSize * lamaInputSize);
+  const planeSize = lamaInputSize * lamaInputSize;
+  const imageWidth = image.naturalWidth || image.width;
+  const imageHeight = image.naturalHeight || image.height;
+  const graffitiX = ((crop.region.x * imageWidth - crop.x) / crop.side) * lamaInputSize;
+  const graffitiY = ((crop.region.y * imageHeight - crop.y) / crop.side) * lamaInputSize;
+  const graffitiWidth = ((crop.region.width * imageWidth) / crop.side) * lamaInputSize;
+  const graffitiHeight = ((crop.region.height * imageHeight) / crop.side) * lamaInputSize;
+  const padding = Math.max(5, Math.round(Math.min(graffitiWidth, graffitiHeight) * 0.08));
+
+  for (let y = 0; y < lamaInputSize; y += 1) {
+    for (let x = 0; x < lamaInputSize; x += 1) {
+      const pixelIndex = y * lamaInputSize + x;
+      const sourceIndex = pixelIndex * 4;
+      const masked =
+        x >= graffitiX - padding &&
+        x <= graffitiX + graffitiWidth + padding &&
+        y >= graffitiY - padding &&
+        y <= graffitiY + graffitiHeight + padding;
+
+      input[pixelIndex] = masked ? 0 : pixels[sourceIndex] / 255;
+      input[planeSize + pixelIndex] = masked ? 0 : pixels[sourceIndex + 1] / 255;
+      input[planeSize * 2 + pixelIndex] = masked ? 0 : pixels[sourceIndex + 2] / 255;
+      input[planeSize * 3 + pixelIndex] = masked ? 1 : 0;
+    }
+  }
+
+  return {
+    tensor: new globalThis.ort.Tensor('float32', input, [1, 4, lamaInputSize, lamaInputSize]),
+    cropCanvas,
+    mask: {
+      x: graffitiX - padding,
+      y: graffitiY - padding,
+      width: graffitiWidth + padding * 2,
+      height: graffitiHeight + padding * 2,
+    },
+  };
+}
+
+function lamaOutputToCanvas(outputTensor) {
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = lamaInputSize;
+  outputCanvas.height = lamaInputSize;
+  const outputContext = outputCanvas.getContext('2d');
+  const imageData = outputContext.createImageData(lamaInputSize, lamaInputSize);
+  const planeSize = lamaInputSize * lamaInputSize;
+
+  for (let index = 0; index < planeSize; index += 1) {
+    imageData.data[index * 4] = Math.max(0, Math.min(255, Math.round(outputTensor.data[index] * 255)));
+    imageData.data[index * 4 + 1] = Math.max(0, Math.min(255, Math.round(outputTensor.data[planeSize + index] * 255)));
+    imageData.data[index * 4 + 2] = Math.max(0, Math.min(255, Math.round(outputTensor.data[planeSize * 2 + index] * 255)));
+    imageData.data[index * 4 + 3] = 255;
+  }
+
+  outputContext.putImageData(imageData, 0, 0);
+  return outputCanvas;
+}
+
+async function renderLamaInpaintedPhoto(imageDataUrl, graffitiRegion) {
   const image = await loadImage(imageDataUrl);
+  setAIStatus(t('aiModelLoading'));
+  const session = await getLamaSession();
+  const crop = getInpaintCrop(image, graffitiRegion);
+  const { tensor, cropCanvas, mask } = buildLamaInput(image, crop);
+  setAIStatus(t('aiInpainting'));
+  const output = await session.run({ input: tensor });
+  const outputTensor = output.output || Object.values(output)[0];
+  const inpaintedCrop = lamaOutputToCanvas(outputTensor);
+
   const outputCanvas = document.createElement('canvas');
   outputCanvas.width = image.naturalWidth || image.width;
   outputCanvas.height = image.naturalHeight || image.height;
-  const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true });
+  const outputContext = outputCanvas.getContext('2d');
   outputContext.drawImage(image, 0, 0, outputCanvas.width, outputCanvas.height);
 
-  const region = clampRegion(graffitiRegion);
-  const x = Math.round(region.x * outputCanvas.width);
-  const y = Math.round(region.y * outputCanvas.height);
-  const width = Math.round(region.width * outputCanvas.width);
-  const height = Math.round(region.height * outputCanvas.height);
-  const [red, green, blue] = getCoverColor(outputContext, outputCanvas.width, outputCanvas.height, region, coverColor);
-  const feather = Math.max(8, Math.round(Math.min(width, height) * 0.08));
-
+  const maskScale = crop.side / lamaInputSize;
+  const maskX = crop.x + mask.x * maskScale;
+  const maskY = crop.y + mask.y * maskScale;
+  const maskWidth = mask.width * maskScale;
+  const maskHeight = mask.height * maskScale;
   outputContext.save();
-  outputContext.filter = `blur(${Math.round(feather * 0.55)}px)`;
-  outputContext.fillStyle = `rgb(${red} ${green} ${blue})`;
-  outputContext.fillRect(x - feather, y - feather, width + feather * 2, height + feather * 2);
+  outputContext.beginPath();
+  outputContext.rect(maskX, maskY, maskWidth, maskHeight);
+  outputContext.clip();
+  outputContext.drawImage(inpaintedCrop, crop.x, crop.y, crop.side, crop.side);
   outputContext.restore();
 
-  const resultDataUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
+  cropCanvas.width = 0;
+  cropCanvas.height = 0;
+  const resultDataUrl = outputCanvas.toDataURL('image/jpeg', 0.92);
   captureAIPhotoButton.disabled = false;
   generatedImage.src = resultDataUrl;
   generatedImage.alt = t('aiResult');
@@ -920,7 +1020,7 @@ async function captureAndGenerateAIPhoto() {
     }
 
     renderAIDetectedColors(analysis.colors, analysis.coverColor);
-    await renderCoveredGraffitiPhoto(imageDataUrl, analysis.region, analysis.coverColor);
+    await renderLamaInpaintedPhoto(imageDataUrl, analysis.region);
   } catch (error) {
     setAIStatus(`${t('aiVisionFailed')} ${error.message || ''}`.trim(), true);
     captureAIPhotoButton.disabled = false;

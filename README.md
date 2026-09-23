@@ -165,7 +165,7 @@ Apple Developer hesabi olmadan iPhone'da uygulama benzeri deneyim icin repo icin
 
 Bu surum Safari uzerinden kamera izni ister, merkez 50x50 piksel alanini analiz eder, RGB/HEX sonucunu gosterir ve ana ekrana eklenebilir.
 
-PWA surumunde AI Kamera sekmesi de vardir. Bu sekme prompt istemeden AI kameradan alinan fotografin tamamini Pollinations vision endpoint'ine gonderir. Model grafitinin konumunu ve kapatma icin uygun duvar renklerini JSON olarak belirler; sonuc fotografi yeniden uretmek yerine ayni kadraji koruyarak grafiti bolgesini secili veya AI tarafindan onerilen duvar rengiyle canvas uzerinde kapatir. Renkler sonucun altinda palet olarak gosterilir. Boylece AI'nin alakasiz yeni bir sahne uretmesi engellenir. Vision istegi internet baglantisina ve public rate limitlerine baglidir.
+PWA surumunde AI Kamera sekmesi de vardir. Bu sekme prompt istemeden AI kameradan alinan fotografin tamamini Pollinations vision endpoint'ine gonderir. Model grafitinin konumunu ve kapatma icin uygun duvar renklerini JSON olarak belirler; ardindan Apache-2.0 lisansli LaMa ONNX inpainting modeli tarayici icinde calisarak grafiti ayni duvar fotografi uzerinde gercekten yeniden doldurur. Model ve fotograf cihazda islenir, API anahtari veya gorsel uretim token'i gerekmez. Renkler sonucun altinda palet olarak gosterilir. Ilk kullanimda yaklasik 62 MB model indirilir ve cihaz tarayicisi onbellege alir. Vision istegi internet baglantisina ve public rate limitlerine baglidir.
 
 Render ayarlari:
 
