@@ -81,17 +81,14 @@ const translations = {
     deleteColor: 'Sil',
     deleteColorConfirm: 'Bu renk silinsin mi?',
     aiStudio: 'AI STUDYO',
-    aiTitle: 'Gorsel uretici',
+    aiTitle: 'Grafiti duzenleyici',
     freeNoToken: 'Token yok',
-    aiPrompt: 'Prompt',
-    aiPromptPlaceholder: 'Cekilen fotografin icindeki grafitinin kapatilmis halini goster',
+    aiColorsTitle: 'Tespit edilen kapatma renkleri',
+    aiColorsEmpty: 'Duzenlemede kullanilacak renkler burada gorunecek.',
     aiCameraPrompt: 'AI kamerayi ac ve grafitili alanin tamamini kadraja al.',
     startAICamera: 'AI kamerayi ac',
     captureAndSendAI: 'Fotografi AI a gonder',
-    useSelectedColor: 'Rengi kapatma icin kullan',
-    generateImage: 'Gorsel uret',
-    aiReady: 'Ucretsiz gorsel uretimi API anahtari olmadan Pollinations ile calisir.',
-    aiPromptRequired: 'Once bir prompt yaz.',
+    aiReady: 'Fotografin tamamini AI ye gonderip grafitiyi yerinde duzenle.',
     aiCameraStarting: 'AI kamerasi aciliyor...',
     aiCameraReady: 'Kareyi hazirla, sonra fotografi AI a gonder.',
     aiPhotoRequired: 'Once AI kamerayi ac.',
@@ -179,17 +176,14 @@ const translations = {
     deleteColor: 'Delete',
     deleteColorConfirm: 'Delete this color?',
     aiStudio: 'AI STUDIO',
-    aiTitle: 'Image generator',
+    aiTitle: 'Graffiti editor',
     freeNoToken: 'No token',
-    aiPrompt: 'Prompt',
-    aiPromptPlaceholder: 'Show the graffiti in the captured photo covered over',
+    aiColorsTitle: 'Detected cover colors',
+    aiColorsEmpty: 'Colors used by the edit will appear here.',
     aiCameraPrompt: 'Open the AI camera and frame the full graffiti photo.',
     startAICamera: 'Open AI camera',
     captureAndSendAI: 'Send photo to AI',
-    useSelectedColor: 'Use color to cover',
-    generateImage: 'Generate image',
-    aiReady: 'Free image generation uses Pollinations without an API key.',
-    aiPromptRequired: 'Write a prompt first.',
+    aiReady: 'Send the full photo to AI and edit the graffiti in place.',
     aiCameraStarting: 'Opening AI camera...',
     aiCameraReady: 'Frame the shot, then send the photo to AI.',
     aiPhotoRequired: 'Open the AI camera first.',
@@ -301,10 +295,9 @@ const capturedAIPhoto = document.querySelector('#capturedAIPhoto');
 const aiCameraPlaceholder = document.querySelector('#aiCameraPlaceholder');
 const startAICameraButton = document.querySelector('#startAICameraButton');
 const captureAIPhotoButton = document.querySelector('#captureAIPhotoButton');
-const aiPromptInput = document.querySelector('#aiPromptInput');
-const useSelectedColorButton = document.querySelector('#useSelectedColorButton');
-const generateImageButton = document.querySelector('#generateImageButton');
 const aiStatusText = document.querySelector('#aiStatusText');
+const aiDetectedColors = document.querySelector('#aiDetectedColors');
+const aiColorCount = document.querySelector('#aiColorCount');
 const generatedImage = document.querySelector('#generatedImage');
 const aiImagePlaceholder = document.querySelector('#aiImagePlaceholder');
 const openGeneratedImageLink = document.querySelector('#openGeneratedImageLink');
@@ -320,8 +313,6 @@ let aiStream = null;
 let analysisTimer = null;
 let liveColor = null;
 let deviceConnected = false;
-let lastAICaptureDataUrl = '';
-let lastGraffitiRegion = null;
 
 let colors = readJson(storageKeys.colors, []);
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
@@ -671,92 +662,7 @@ function setAIStatus(message, isError = false) {
   aiStatusText.classList.toggle('is-error', isError);
 }
 
-function applySelectedColorToPrompt() {
-  if (!selectedColor) {
-    setAIStatus(t('selectColorFirst'), true);
-    return;
-  }
-
-  const colorName = getColorName(selectedColor, t('savedColor'));
-  aiPromptInput.value =
-    settings.language === 'tr'
-      ? `Cekilen fotografin icindeki grafitinin ${colorName} ${selectedColor.hex} boya ile kapatilmis halini goster`
-      : `Show the graffiti in the captured photo covered over with ${colorName} ${selectedColor.hex} paint`;
-  setAIStatus(t('aiReady'));
-}
-
-function buildAIImageUrl(prompt) {
-  const params = new URLSearchParams({
-    width: '768',
-    height: '768',
-    model: 'flux',
-    private: 'true',
-    safe: 'true',
-    nologo: 'true',
-    seed: String(Date.now() % 1000000000),
-    referrer: 'find-color-pwa',
-  });
-
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params.toString()}`;
-}
-
-function getSelectedColorHint() {
-  return selectedColor
-    ? `, covered with paint color ${selectedColor.hex}, RGB ${selectedColor.red} ${selectedColor.green} ${selectedColor.blue}`
-    : '';
-}
-
-function generateAIImage() {
-  const prompt = aiPromptInput.value.trim();
-
-  if (!prompt) {
-    setAIStatus(t('aiPromptRequired'), true);
-    aiPromptInput.focus();
-    return;
-  }
-
-  if (lastAICaptureDataUrl) {
-    renderCoveredGraffitiPhoto(lastAICaptureDataUrl, lastGraffitiRegion);
-    return;
-  }
-
-  renderGeneratedAIImage(`${prompt}${getSelectedColorHint()}`, prompt);
-}
-
-function renderGeneratedAIImage(generationPrompt, altText) {
-  const imageUrl = buildAIImageUrl(generationPrompt);
-  generateImageButton.disabled = true;
-  captureAIPhotoButton.disabled = true;
-  openGeneratedImageLink.href = '#';
-  openGeneratedImageLink.classList.add('is-disabled');
-  aiImageFrame.classList.remove('has-image');
-  aiImagePlaceholder.textContent = t('aiGenerating');
-  setAIStatus(t('aiGenerating'));
-
-  generatedImage.onload = () => {
-    generateImageButton.disabled = false;
-    captureAIPhotoButton.disabled = false;
-    aiImageFrame.classList.add('has-image');
-    openGeneratedImageLink.href = imageUrl;
-    openGeneratedImageLink.classList.remove('is-disabled');
-    setAIStatus(t('aiGenerated'));
-  };
-
-  generatedImage.onerror = () => {
-    generateImageButton.disabled = false;
-    captureAIPhotoButton.disabled = false;
-    aiImageFrame.classList.remove('has-image');
-    openGeneratedImageLink.href = '#';
-    openGeneratedImageLink.classList.add('is-disabled');
-    aiImagePlaceholder.textContent = t('aiImagePlaceholder');
-    setAIStatus(t('aiFailed'), true);
-  };
-
-  generatedImage.alt = altText || generationPrompt;
-  generatedImage.src = imageUrl;
-}
-
-async function buildGraffitiRegionFromPhoto(imageDataUrl) {
+async function buildGraffitiAnalysisFromPhoto(imageDataUrl) {
   const payload = {
     model: 'openai',
     private: true,
@@ -767,7 +673,7 @@ async function buildGraffitiRegionFromPhoto(imageDataUrl) {
         content: [
           {
             type: 'text',
-            text: 'Look at the full photo and locate the graffiti. Return only valid JSON in this exact shape: {"x":0.0,"y":0.0,"width":0.0,"height":0.0}. Values must be normalized from 0 to 1 relative to the full image. The box must cover only the graffiti area, not the whole photo. No markdown and no explanation.',
+            text: 'Look at the full wall photo. Locate only the graffiti and identify the paint colors needed to cover it while matching the surrounding wall. Return only valid JSON in this exact shape: {"graffiti":{"x":0.0,"y":0.0,"width":0.0,"height":0.0},"coverColor":{"name":"wall paint","hex":"#FFFFFF"},"colors":[{"name":"wall paint","hex":"#FFFFFF","percentage":100}]}. Coordinates must be normalized from 0 to 1 relative to the full image. The box must cover only the graffiti, not the whole photo. Return 2 to 5 visible wall or cover colors with valid six-digit hex values. No markdown and no explanation.',
           },
           {
             type: 'image_url',
@@ -802,7 +708,8 @@ async function buildGraffitiRegionFromPhoto(imageDataUrl) {
   }
 
   try {
-    const region = JSON.parse(jsonText);
+    const analysis = JSON.parse(jsonText);
+    const region = analysis.graffiti || analysis.region || analysis;
     const x = Number(region.x);
     const y = Number(region.y);
     const width = Number(region.width);
@@ -812,15 +719,97 @@ async function buildGraffitiRegionFromPhoto(imageDataUrl) {
       return null;
     }
 
+    const colors = (Array.isArray(analysis.colors) ? analysis.colors : [])
+      .map((color) => ({
+        name: String(color.name || t('savedColor')),
+        hex: normalizeHex(color.hex),
+        percentage: Number(color.percentage),
+      }))
+      .filter((color) => color.hex)
+      .slice(0, 5);
+    const coverColor = analysis.coverColor && normalizeHex(analysis.coverColor.hex)
+      ? {
+          name: String(analysis.coverColor.name || t('savedColor')),
+          hex: normalizeHex(analysis.coverColor.hex),
+        }
+      : colors[0] || null;
+
     return {
-      x: Math.max(0, Math.min(1, x)),
-      y: Math.max(0, Math.min(1, y)),
-      width: Math.max(0.04, Math.min(1, width)),
-      height: Math.max(0.04, Math.min(1, height)),
+      region: {
+        x: Math.max(0, Math.min(1, x)),
+        y: Math.max(0, Math.min(1, y)),
+        width: Math.max(0.04, Math.min(1, width)),
+        height: Math.max(0.04, Math.min(1, height)),
+      },
+      colors,
+      coverColor,
     };
   } catch {
     return null;
   }
+}
+
+function normalizeHex(value) {
+  const match = String(value || '').trim().match(/^#?([0-9a-f]{6})$/i);
+  return match ? `#${match[1].toUpperCase()}` : null;
+}
+
+function hexToRgb(hex) {
+  const normalized = normalizeHex(hex);
+  if (!normalized) {
+    return null;
+  }
+
+  return [
+    Number.parseInt(normalized.slice(1, 3), 16),
+    Number.parseInt(normalized.slice(3, 5), 16),
+    Number.parseInt(normalized.slice(5, 7), 16),
+  ];
+}
+
+function renderAIDetectedColors(colors, coverColor) {
+  const palette = [...(colors || [])];
+
+  if (selectedColor && !palette.some((color) => color.hex === selectedColor.hex)) {
+    palette.unshift({
+      name: settings.language === 'tr' ? 'Secili kapatma rengi' : 'Selected cover color',
+      hex: selectedColor.hex,
+      percentage: null,
+    });
+  }
+
+  if (coverColor && !palette.some((color) => color.hex === coverColor.hex)) {
+    palette.unshift({ ...coverColor, percentage: null });
+  }
+
+  aiDetectedColors.innerHTML = '';
+  aiColorCount.textContent = String(palette.length);
+
+  if (!palette.length) {
+    const empty = document.createElement('span');
+    empty.className = 'muted';
+    empty.textContent = t('aiColorsEmpty');
+    aiDetectedColors.append(empty);
+    return;
+  }
+
+  palette.forEach((color) => {
+    const item = document.createElement('div');
+    item.className = 'ai-color-item';
+    const percentage = Number.isFinite(color.percentage) ? ` ${Math.round(color.percentage)}%` : '';
+    const swatch = document.createElement('span');
+    swatch.className = 'ai-color-swatch';
+    swatch.style.setProperty('--ai-color', color.hex);
+    const copy = document.createElement('span');
+    copy.className = 'ai-color-copy';
+    const name = document.createElement('strong');
+    name.textContent = color.name;
+    const value = document.createElement('small');
+    value.textContent = `${color.hex}${percentage}`;
+    copy.append(name, value);
+    item.append(swatch, copy);
+    aiDetectedColors.append(item);
+  });
 }
 
 function loadImage(dataUrl) {
@@ -846,9 +835,14 @@ function clampRegion(region) {
   };
 }
 
-function getCoverColor(context2d, width, height, region) {
+function getCoverColor(context2d, width, height, region, coverColor) {
   if (selectedColor) {
     return [selectedColor.red, selectedColor.green, selectedColor.blue];
+  }
+
+  const aiCoverColor = hexToRgb(coverColor?.hex);
+  if (aiCoverColor) {
+    return aiCoverColor;
   }
 
   const x = Math.round(region.x * width);
@@ -867,7 +861,7 @@ function getCoverColor(context2d, width, height, region) {
     .map((value) => Math.round(value / pixels.length));
 }
 
-async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion) {
+async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion, coverColor) {
   const image = await loadImage(imageDataUrl);
   const outputCanvas = document.createElement('canvas');
   outputCanvas.width = image.naturalWidth || image.width;
@@ -880,7 +874,7 @@ async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion) {
   const y = Math.round(region.y * outputCanvas.height);
   const width = Math.round(region.width * outputCanvas.width);
   const height = Math.round(region.height * outputCanvas.height);
-  const [red, green, blue] = getCoverColor(outputContext, outputCanvas.width, outputCanvas.height, region);
+  const [red, green, blue] = getCoverColor(outputContext, outputCanvas.width, outputCanvas.height, region, coverColor);
   const feather = Math.max(8, Math.round(Math.min(width, height) * 0.08));
 
   outputContext.save();
@@ -890,7 +884,6 @@ async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion) {
   outputContext.restore();
 
   const resultDataUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
-  generateImageButton.disabled = false;
   captureAIPhotoButton.disabled = false;
   generatedImage.src = resultDataUrl;
   generatedImage.alt = t('aiResult');
@@ -913,30 +906,24 @@ async function captureAndGenerateAIPhoto() {
 
   capturedAIPhoto.src = imageDataUrl;
   capturedAIPhoto.alt = t('captureAndSendAI');
-  lastAICaptureDataUrl = imageDataUrl;
   aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
   aiCameraFeed.closest('.ai-camera-frame').classList.add('has-capture');
 
   try {
     startAICameraButton.disabled = true;
     captureAIPhotoButton.disabled = true;
-    generateImageButton.disabled = true;
     setAIStatus(t('aiPhotoCaptured'));
 
-    const graffitiRegion = await buildGraffitiRegionFromPhoto(imageDataUrl);
-    if (!graffitiRegion) {
+    const analysis = await buildGraffitiAnalysisFromPhoto(imageDataUrl);
+    if (!analysis) {
       throw new Error(t('aiVisionFailed'));
     }
 
-    lastGraffitiRegion = graffitiRegion;
-    aiPromptInput.value = settings.language === 'tr'
-      ? 'Cekilen fotografin ayni kadrajini koru ve yalnizca grafitiyi boya ile kapat.'
-      : 'Keep the exact captured photo and cover only the graffiti with paint.';
-    await renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion);
+    renderAIDetectedColors(analysis.colors, analysis.coverColor);
+    await renderCoveredGraffitiPhoto(imageDataUrl, analysis.region, analysis.coverColor);
   } catch (error) {
     setAIStatus(`${t('aiVisionFailed')} ${error.message || ''}`.trim(), true);
     captureAIPhotoButton.disabled = false;
-    generateImageButton.disabled = false;
   } finally {
     startAICameraButton.disabled = false;
   }
@@ -1253,13 +1240,6 @@ retryButton.addEventListener('click', startCamera);
 measureButton.addEventListener('click', saveLiveColor);
 startAICameraButton.addEventListener('click', startAICamera);
 captureAIPhotoButton.addEventListener('click', captureAndGenerateAIPhoto);
-useSelectedColorButton.addEventListener('click', applySelectedColorToPrompt);
-generateImageButton.addEventListener('click', generateAIImage);
-aiPromptInput.addEventListener('keydown', (event) => {
-  if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-    generateAIImage();
-  }
-});
 mlInput.addEventListener('input', renderFormula);
 deviceMlInput.addEventListener('input', () => {});
 

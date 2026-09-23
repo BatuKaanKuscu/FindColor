@@ -181,7 +181,7 @@
         <div class="section-row">
           <div>
             <p class="eyebrow" data-i18n="aiStudio">AI STUDIO</p>
-            <h2 data-i18n="aiTitle">Image generator</h2>
+            <h2 data-i18n="aiTitle">Graffiti editor</h2>
           </div>
           <span class="status-pill" data-i18n="freeNoToken">No token</span>
         </div>
@@ -203,28 +203,6 @@
           </div>
         </section>
 
-        <section class="panel">
-          <label class="input-label" for="aiPromptInput" data-i18n="aiPrompt">Prompt</label>
-          <textarea
-            id="aiPromptInput"
-            class="text-area"
-            maxlength="420"
-            data-i18n-placeholder="aiPromptPlaceholder"
-            placeholder="Show the graffiti in the captured photo covered over"
-          ></textarea>
-          <div class="ai-tools">
-            <button id="useSelectedColorButton" class="secondary-button full" type="button" data-i18n="useSelectedColor">
-              Use selected color
-            </button>
-            <button id="generateImageButton" class="primary-button full" type="button" data-i18n="generateImage">
-              Generate image
-            </button>
-          </div>
-          <p id="aiStatusText" class="status-text" data-i18n="aiReady">
-            Free image generation uses Pollinations without an API key.
-          </p>
-        </section>
-
         <section class="panel ai-preview-panel">
           <div class="section-row">
             <h2 data-i18n="aiResult">Result</h2>
@@ -236,6 +214,19 @@
             <img id="generatedImage" alt="" />
             <span id="aiImagePlaceholder" data-i18n="aiImagePlaceholder">Your generated image will appear here.</span>
           </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-row">
+            <h2 data-i18n="aiColorsTitle">Detected cover colors</h2>
+            <span id="aiColorCount" class="status-pill">0</span>
+          </div>
+          <div id="aiDetectedColors" class="ai-color-list" aria-live="polite">
+            <span class="muted" data-i18n="aiColorsEmpty">Colors used by the edit will appear here.</span>
+          </div>
+          <p id="aiStatusText" class="status-text" data-i18n="aiReady">
+            Send the full photo to AI to edit the graffiti in place.
+          </p>
         </section>
       </section>
 
