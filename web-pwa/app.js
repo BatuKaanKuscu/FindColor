@@ -98,7 +98,7 @@ const translations = {
     aiPhotoCaptured: 'Fotograf yakalandi, AI fotografin tamamini inceliyor...',
     aiVisionFailed: 'Fotograf AI tarafindan okunamadi.',
     aiGenerating: 'Gorsel uretiliyor...',
-    aiGenerated: 'Gorsel hazir.',
+    aiGenerated: 'Ayni fotograf korunarak grafiti kapatildi.',
     aiFailed: 'Gorsel uretilirken hata olustu.',
     aiResult: 'Sonuc',
     openImage: 'Ac',
@@ -196,7 +196,7 @@ const translations = {
     aiPhotoCaptured: 'Photo captured. AI is reading the full photo...',
     aiVisionFailed: 'AI could not read the photo.',
     aiGenerating: 'Generating image...',
-    aiGenerated: 'Image is ready.',
+    aiGenerated: 'The original photo was preserved and the graffiti was covered.',
     aiFailed: 'The image could not be generated.',
     aiResult: 'Result',
     openImage: 'Open',
@@ -320,6 +320,8 @@ let aiStream = null;
 let analysisTimer = null;
 let liveColor = null;
 let deviceConnected = false;
+let lastAICaptureDataUrl = '';
+let lastGraffitiRegion = null;
 
 let colors = readJson(storageKeys.colors, []);
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
@@ -713,6 +715,11 @@ function generateAIImage() {
     return;
   }
 
+  if (lastAICaptureDataUrl) {
+    renderCoveredGraffitiPhoto(lastAICaptureDataUrl, lastGraffitiRegion);
+    return;
+  }
+
   renderGeneratedAIImage(`${prompt}${getSelectedColorHint()}`, prompt);
 }
 
@@ -749,11 +756,7 @@ function renderGeneratedAIImage(generationPrompt, altText) {
   generatedImage.src = imageUrl;
 }
 
-async function buildGraffitiCoverPromptFromPhoto(imageDataUrl) {
-  const colorInstruction = selectedColor
-    ? `Use ${selectedColor.hex} paint as the cover color where appropriate.`
-    : 'Use a realistic clean wall or matching paint color where appropriate.';
-
+async function buildGraffitiRegionFromPhoto(imageDataUrl) {
   const payload = {
     model: 'openai',
     private: true,
@@ -764,13 +767,7 @@ async function buildGraffitiCoverPromptFromPhoto(imageDataUrl) {
         content: [
           {
             type: 'text',
-            text: [
-              'Look at the full photo. Write one concise English image-generation prompt.',
-              'The prompt must preserve the same camera angle, wall, lighting, environment, and composition.',
-              'The result should show the graffiti covered over with paint, clean and realistic, with no visible graffiti text.',
-              colorInstruction,
-              'Return only the prompt. No quotes, no explanation.',
-            ].join(' '),
+            text: 'Look at the full photo and locate the graffiti. Return only valid JSON in this exact shape: {"x":0.0,"y":0.0,"width":0.0,"height":0.0}. Values must be normalized from 0 to 1 relative to the full image. The box must cover only the graffiti area, not the whole photo. No markdown and no explanation.',
           },
           {
             type: 'image_url',
@@ -796,7 +793,112 @@ async function buildGraffitiCoverPromptFromPhoto(imageDataUrl) {
   }
 
   const result = await response.json();
-  return result?.choices?.[0]?.message?.content?.trim() || '';
+  const content = result?.choices?.[0]?.message?.content;
+  const raw = typeof content === 'string' ? content : JSON.stringify(content || '');
+  const jsonText = raw.match(/\{[\s\S]*\}/)?.[0];
+
+  if (!jsonText) {
+    return null;
+  }
+
+  try {
+    const region = JSON.parse(jsonText);
+    const x = Number(region.x);
+    const y = Number(region.y);
+    const width = Number(region.width);
+    const height = Number(region.height);
+
+    if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
+      return null;
+    }
+
+    return {
+      x: Math.max(0, Math.min(1, x)),
+      y: Math.max(0, Math.min(1, y)),
+      width: Math.max(0.04, Math.min(1, width)),
+      height: Math.max(0.04, Math.min(1, height)),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function loadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = dataUrl;
+  });
+}
+
+function clampRegion(region) {
+  const fallback = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
+  const source = region || fallback;
+  const width = Math.max(0.04, Math.min(1, source.width));
+  const height = Math.max(0.04, Math.min(1, source.height));
+
+  return {
+    x: Math.max(0, Math.min(1 - width, source.x)),
+    y: Math.max(0, Math.min(1 - height, source.y)),
+    width,
+    height,
+  };
+}
+
+function getCoverColor(context2d, width, height, region) {
+  if (selectedColor) {
+    return [selectedColor.red, selectedColor.green, selectedColor.blue];
+  }
+
+  const x = Math.round(region.x * width);
+  const y = Math.round(region.y * height);
+  const regionWidth = Math.max(1, Math.round(region.width * width));
+  const regionHeight = Math.max(1, Math.round(region.height * height));
+  const samplePoints = [
+    [Math.max(0, x - Math.round(regionWidth * 0.12)), y + Math.round(regionHeight * 0.15)],
+    [Math.min(width - 1, x + regionWidth + Math.round(regionWidth * 0.12)), y + Math.round(regionHeight * 0.15)],
+    [x + Math.round(regionWidth * 0.15), Math.max(0, y - Math.round(regionHeight * 0.12))],
+    [x + Math.round(regionWidth * 0.15), Math.min(height - 1, y + regionHeight + Math.round(regionHeight * 0.12))],
+  ];
+  const pixels = samplePoints.map(([sampleX, sampleY]) => context2d.getImageData(sampleX, sampleY, 1, 1).data);
+  return pixels
+    .reduce((sum, pixel) => sum.map((value, index) => value + pixel[index]), [0, 0, 0])
+    .map((value) => Math.round(value / pixels.length));
+}
+
+async function renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion) {
+  const image = await loadImage(imageDataUrl);
+  const outputCanvas = document.createElement('canvas');
+  outputCanvas.width = image.naturalWidth || image.width;
+  outputCanvas.height = image.naturalHeight || image.height;
+  const outputContext = outputCanvas.getContext('2d', { willReadFrequently: true });
+  outputContext.drawImage(image, 0, 0, outputCanvas.width, outputCanvas.height);
+
+  const region = clampRegion(graffitiRegion);
+  const x = Math.round(region.x * outputCanvas.width);
+  const y = Math.round(region.y * outputCanvas.height);
+  const width = Math.round(region.width * outputCanvas.width);
+  const height = Math.round(region.height * outputCanvas.height);
+  const [red, green, blue] = getCoverColor(outputContext, outputCanvas.width, outputCanvas.height, region);
+  const feather = Math.max(8, Math.round(Math.min(width, height) * 0.08));
+
+  outputContext.save();
+  outputContext.filter = `blur(${Math.round(feather * 0.55)}px)`;
+  outputContext.fillStyle = `rgb(${red} ${green} ${blue})`;
+  outputContext.fillRect(x - feather, y - feather, width + feather * 2, height + feather * 2);
+  outputContext.restore();
+
+  const resultDataUrl = outputCanvas.toDataURL('image/jpeg', 0.9);
+  generateImageButton.disabled = false;
+  captureAIPhotoButton.disabled = false;
+  generatedImage.src = resultDataUrl;
+  generatedImage.alt = t('aiResult');
+  openGeneratedImageLink.href = resultDataUrl;
+  openGeneratedImageLink.classList.remove('is-disabled');
+  aiImageFrame.classList.add('has-image');
+  aiImagePlaceholder.textContent = t('aiGenerated');
+  setAIStatus(t('aiGenerated'));
 }
 
 async function captureAndGenerateAIPhoto() {
@@ -811,6 +913,7 @@ async function captureAndGenerateAIPhoto() {
 
   capturedAIPhoto.src = imageDataUrl;
   capturedAIPhoto.alt = t('captureAndSendAI');
+  lastAICaptureDataUrl = imageDataUrl;
   aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
   aiCameraFeed.closest('.ai-camera-frame').classList.add('has-capture');
 
@@ -820,13 +923,16 @@ async function captureAndGenerateAIPhoto() {
     generateImageButton.disabled = true;
     setAIStatus(t('aiPhotoCaptured'));
 
-    const prompt = await buildGraffitiCoverPromptFromPhoto(imageDataUrl);
-    if (!prompt) {
+    const graffitiRegion = await buildGraffitiRegionFromPhoto(imageDataUrl);
+    if (!graffitiRegion) {
       throw new Error(t('aiVisionFailed'));
     }
 
-    aiPromptInput.value = prompt;
-    renderGeneratedAIImage(`${prompt}${getSelectedColorHint()}`, prompt);
+    lastGraffitiRegion = graffitiRegion;
+    aiPromptInput.value = settings.language === 'tr'
+      ? 'Cekilen fotografin ayni kadrajini koru ve yalnizca grafitiyi boya ile kapat.'
+      : 'Keep the exact captured photo and cover only the graffiti with paint.';
+    await renderCoveredGraffitiPhoto(imageDataUrl, graffitiRegion);
   } catch (error) {
     setAIStatus(`${t('aiVisionFailed')} ${error.message || ''}`.trim(), true);
     captureAIPhotoButton.disabled = false;
