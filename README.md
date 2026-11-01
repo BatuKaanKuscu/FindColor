@@ -163,7 +163,7 @@ Apple Developer hesabi olmadan iPhone'da uygulama benzeri deneyim icin repo icin
 - [web-pwa/manifest.webmanifest](web-pwa/manifest.webmanifest)
 - [render.yaml](render.yaml)
 
-Bu surum Safari uzerinden kamera izni ister, kamerada suruklenebilir kare ROI alani gosterir ve secili bolgenin RGB/HEX sonucunu gunceller. `Blank Al [Saf Su]` dugmesi referans yogunlugunu (`I0`) kaydeder; `Numune Oku` dugmesi numune yogunlugunu (`I`) alip kanal bazli ve ortalama absorbansi `A = -log10(I / I0)` formuluyle hesaplar. `Spektrum` sekmesi olcumleri localStorage icinde tutar, RGB/ortalama absorbans grafigini cizer ve olcumleri UTF-8, nokta virgul ayracli CSV olarak Excel'e aktarir. AI ve cihaz sekmeleri bu PWA surumunden kaldirilmistir.
+Bu surum Safari uzerinden kamera izni ister, kamerada suruklenebilir kare ROI alani gosterir ve secili bolgenin RGB/HEX sonucunu gunceller. `Blank Al [Saf Su]` dugmesi referans yogunlugunu (`I0`) kaydeder; `Numune Oku` dugmesi numune yogunlugunu (`I`) alip kanal bazli ve ortalama absorbansi `A = -log10(I / I0)` formuluyle hesaplar. Sonuc ekrani numuneyi blank ve onceki olcumle karsilastirip `ayni`, `daha acik`, `daha koyu` veya `farkli ton` olarak yorumlar. `Spektrum` sekmesi olcumleri localStorage icinde tutar, RGB/ortalama absorbans grafigini cizer ve olcumleri UTF-8, nokta virgul ayracli CSV olarak Excel'e aktarir. AI ve cihaz sekmeleri bu PWA surumunden kaldirilmistir.
 
 Render ayarlari:
 

@@ -56,6 +56,15 @@ const translations = {
     date: 'Tarih',
     sampleRgbShort: 'Numune RGB',
     absorbanceShort: 'A ort.',
+    interpretation: 'Yorum',
+    sameAsBlank: 'Blank ile ayni tona cok yakin.',
+    darkerThanBlank: "Blank'e gore daha koyu.",
+    lighterThanBlank: "Blank'e gore daha acik.",
+    differentFromBlank: "Blank'ten farkli bir ton.",
+    sameAsPrevious: 'Onceki numune ile ayni tona cok yakin.',
+    darkerThanPrevious: 'Onceki numuneden daha koyu.',
+    lighterThanPrevious: 'Onceki numuneden daha acik.',
+    differentFromPrevious: 'Onceki numuneden farkli bir ton.',
     noMeasurements: 'Henuz olcum yok.',
     catalog: 'KATALOG',
     colorGallery: 'Renk galerisi',
@@ -148,6 +157,15 @@ const translations = {
     date: 'Date',
     sampleRgbShort: 'Sample RGB',
     absorbanceShort: 'A mean',
+    interpretation: 'Interpretation',
+    sameAsBlank: 'Very close to the blank tone.',
+    darkerThanBlank: 'Darker than the blank.',
+    lighterThanBlank: 'Lighter than the blank.',
+    differentFromBlank: 'A different tone from the blank.',
+    sameAsPrevious: 'Very close to the previous sample.',
+    darkerThanPrevious: 'Darker than the previous sample.',
+    lighterThanPrevious: 'Lighter than the previous sample.',
+    differentFromPrevious: 'A different tone from the previous sample.',
     noMeasurements: 'No measurements yet.',
     catalog: 'CATALOG',
     colorGallery: 'Color gallery',
@@ -281,9 +299,11 @@ const blankRgbValue = document.querySelector('#blankRgbValue');
 const sampleRgbValue = document.querySelector('#sampleRgbValue');
 const absorbanceValue = document.querySelector('#absorbanceValue');
 const absorbanceStatus = document.querySelector('#absorbanceStatus');
+const interpretationValue = document.querySelector('#interpretationValue');
 const measurementCount = document.querySelector('#measurementCount');
 const reportMeasurementCount = document.querySelector('#reportMeasurementCount');
 const latestAbsorbance = document.querySelector('#latestAbsorbance');
+const latestInterpretation = document.querySelector('#latestInterpretation');
 const reportBlankValue = document.querySelector('#reportBlankValue');
 const measurementCountBadge = document.querySelector('#measurementCountBadge');
 const absorbanceChart = document.querySelector('#absorbanceChart');
@@ -589,7 +609,8 @@ function captureSample() {
   const result = calculateAbsorbance(blankRgb, sampleRgb);
   sampleRgbValue.textContent = formatRgb(sampleRgb);
   absorbanceValue.textContent = `${result.mean.toFixed(3)} (R ${result.red.toFixed(3)} / G ${result.green.toFixed(3)} / B ${result.blue.toFixed(3)})`;
-  saveMeasurementRecord(result, sampleRgb);
+  const measurement = saveMeasurementRecord(result, sampleRgb);
+  interpretationValue.textContent = getMeasurementInterpretation(measurement, measurements[1]);
   absorbanceStatus.textContent = t('sampleSaved');
   setStatus(t('absorbanceReady'));
 }
@@ -600,6 +621,49 @@ function getRgbValues(color) {
     green: Number(color?.green) || 0,
     blue: Number(color?.blue) || 0,
   };
+}
+
+function getBrightness(color) {
+  const rgb = getRgbValues(color);
+  return rgb.red * 0.299 + rgb.green * 0.587 + rgb.blue * 0.114;
+}
+
+function compareColors(reference, sample, referenceName) {
+  if (!reference || !sample) {
+    return null;
+  }
+
+  const referenceRgb = getRgbValues(reference);
+  const sampleRgbValues = getRgbValues(sample);
+  const channelDifference = ['red', 'green', 'blue'].reduce(
+    (total, channel) => total + Math.abs(sampleRgbValues[channel] - referenceRgb[channel]),
+    0,
+  ) / 3;
+  const brightnessDifference = getBrightness(sampleRgbValues) - getBrightness(referenceRgb);
+  const suffix = referenceName === 'blank' ? 'Blank' : 'Previous';
+
+  if (channelDifference <= 10) {
+    return `sameAs${suffix}`;
+  }
+
+  if (Math.abs(brightnessDifference) <= 10) {
+    return `differentFrom${suffix}`;
+  }
+
+  return brightnessDifference < 0 ? `darkerThan${suffix}` : `lighterThan${suffix}`;
+}
+
+function getMeasurementInterpretation(measurement, previousMeasurement = null) {
+  if (!measurement) {
+    return '-';
+  }
+
+  const keys = [
+    compareColors(measurement.blank, measurement.sample, 'blank'),
+    compareColors(previousMeasurement?.sample, measurement.sample, 'previous'),
+  ].filter(Boolean);
+
+  return keys.map((key) => t(key)).join(' ');
 }
 
 function saveMeasurementRecord(absorbance, sample) {
@@ -620,6 +684,7 @@ function saveMeasurementRecord(absorbance, sample) {
   measurements = [measurement, ...measurements].slice(0, 100);
   writeJson(storageKeys.measurements, measurements);
   renderAll();
+  return measurement;
 }
 
 function formatAbsorbance(value) {
@@ -739,12 +804,14 @@ function renderMeasurements() {
 
   const latest = measurements[0];
   latestAbsorbance.textContent = latest ? formatAbsorbance(latest.absorbance?.mean) : '-';
+  latestInterpretation.textContent = latest ? getMeasurementInterpretation(latest, measurements[1]) : '-';
+  interpretationValue.textContent = latest ? getMeasurementInterpretation(latest, measurements[1]) : '-';
   reportBlankValue.textContent = latest ? formatRgb(latest.blank) : '-';
   measurementTableBody.innerHTML = '';
   measurementTable.hidden = count === 0;
   measurementEmpty.hidden = count > 0;
 
-  measurements.slice(0, 30).forEach((measurement) => {
+  measurements.slice(0, 30).forEach((measurement, index) => {
     const row = document.createElement('tr');
     const sample = measurement.sample || {};
     const absorbance = measurement.absorbance || {};
@@ -752,6 +819,7 @@ function renderMeasurements() {
       <td>${formatMeasurementDate(measurement.createdAt)}</td>
       <td>${formatRgb(sample)}<small>R ${sample.red ?? '-'} / G ${sample.green ?? '-'} / B ${sample.blue ?? '-'}</small></td>
       <td><strong>${formatAbsorbance(absorbance.mean)}</strong><small>R ${formatAbsorbance(absorbance.red)} / G ${formatAbsorbance(absorbance.green)} / B ${formatAbsorbance(absorbance.blue)}</small></td>
+      <td class="interpretation-cell">${getMeasurementInterpretation(measurement, measurements[index + 1])}</td>
     `;
     measurementTableBody.append(row);
   });
@@ -775,8 +843,8 @@ function exportMeasurementsCsv() {
   }
 
   const rows = [
-    ['Tarih', 'Blank R', 'Blank G', 'Blank B', 'Numune R', 'Numune G', 'Numune B', 'A R', 'A G', 'A B', 'A Ortalama'],
-    ...measurements.map((measurement) => [
+    ['Tarih', 'Blank R', 'Blank G', 'Blank B', 'Numune R', 'Numune G', 'Numune B', 'A R', 'A G', 'A B', 'A Ortalama', t('interpretation')],
+    ...measurements.map((measurement, index) => [
       measurement.createdAt,
       measurement.blank?.red,
       measurement.blank?.green,
@@ -788,6 +856,7 @@ function exportMeasurementsCsv() {
       csvNumber(measurement.absorbance?.green),
       csvNumber(measurement.absorbance?.blue),
       csvNumber(measurement.absorbance?.mean),
+      getMeasurementInterpretation(measurement, measurements[index + 1]),
     ]),
   ];
   const csv = rows.map((row) => row.map(csvCell).join(';')).join('\r\n');

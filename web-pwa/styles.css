@@ -315,6 +315,22 @@ h2 {
   white-space: nowrap;
 }
 
+.interpretation-banner {
+  margin-top: 12px;
+  padding: 13px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+}
+
+.interpretation-banner strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
 .chart-panel {
   padding-bottom: 12px;
 }
@@ -423,6 +439,13 @@ h2 {
 
 .measurement-table td strong {
   font-size: 14px;
+}
+
+.measurement-table td.interpretation-cell {
+  min-width: 190px;
+  color: var(--muted);
+  line-height: 1.35;
+  white-space: normal;
 }
 
 .panel {
@@ -600,6 +623,20 @@ h2 {
 
 .status-text.is-error {
   color: var(--danger);
+}
+
+.interpretation-line {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.interpretation-line strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1.35;
 }
 
 .actions {
