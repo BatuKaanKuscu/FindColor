@@ -314,6 +314,7 @@ const measurementEmpty = document.querySelector('#measurementEmpty');
 const exportMeasurementsButton = document.querySelector('#exportMeasurementsButton');
 const clearMeasurementsButton = document.querySelector('#clearMeasurementsButton');
 const languageButton = document.querySelector('#languageButton');
+const languageCode = document.querySelector('#languageCode');
 const userNameInput = document.querySelector('#userNameInput');
 const workspaceInput = document.querySelector('#workspaceInput');
 const saveProfileButton = document.querySelector('#saveProfileButton');
@@ -357,6 +358,10 @@ function t(key) {
   return translations[settings.language][key] || translations.en[key] || key;
 }
 
+function refreshIcons() {
+  globalThis.lucide?.createIcons?.();
+}
+
 function rgbToHex(red, green, blue) {
   return `#${[red, green, blue]
     .map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0'))
@@ -393,7 +398,7 @@ function setView(viewName) {
 
 function applyLanguage() {
   document.documentElement.lang = settings.language;
-  languageButton.textContent = settings.language.toUpperCase();
+  languageCode.textContent = settings.language.toUpperCase();
   document.querySelectorAll('[data-i18n]').forEach((node) => {
     node.textContent = t(node.dataset.i18n);
   });
@@ -1190,7 +1195,7 @@ function createGalleryCard(color, title, canDelete = false) {
       <strong>${title}</strong>
       ${
         canDelete
-          ? `<button class="delete-color-button" type="button" aria-label="${t('deleteColor')} ${color.hex}">${t('deleteColor')}</button>`
+          ? `<button class="delete-color-button" type="button" aria-label="${t('deleteColor')} ${color.hex}"><i data-lucide="trash-2" class="button-icon" aria-hidden="true"></i><span>${t('deleteColor')}</span></button>`
           : ''
       }
     </div>
@@ -1300,6 +1305,7 @@ function renderAll() {
   renderMeasurements();
   renderThemePalette();
   renderProfile();
+  refreshIcons();
 }
 
 document.querySelectorAll('[data-go]').forEach((button) => {
@@ -1371,6 +1377,7 @@ window.addEventListener('pagehide', () => {
 
 applyTheme();
 applyLanguage();
+window.addEventListener('load', refreshIcons);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

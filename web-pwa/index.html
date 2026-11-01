@@ -19,16 +19,34 @@
           <h1>Find Color</h1>
         </div>
         <div class="header-actions">
-          <button class="small-button" type="button" data-go="profile" data-i18n="profileShort">Profile</button>
-          <button id="languageButton" class="small-button" type="button">TR</button>
+          <button class="small-button" type="button" data-go="profile">
+            <i data-lucide="user-round" class="button-icon" aria-hidden="true"></i>
+            <span data-i18n="profileShort">Profile</span>
+          </button>
+          <button id="languageButton" class="small-button" type="button" aria-label="Change language" title="Change language">
+            <i data-lucide="languages" class="button-icon" aria-hidden="true"></i>
+            <span id="languageCode">TR</span>
+          </button>
         </div>
       </header>
 
       <nav class="top-tabs" aria-label="Color tools">
-        <button class="top-tab" type="button" data-go="camera" data-i18n="topMeasure">Olc</button>
-        <button class="top-tab" type="button" data-go="report" data-i18n="topReport">Spektrum</button>
-        <button class="top-tab" type="button" data-go="gallery" data-i18n="topGallery">Galeri</button>
-        <button class="top-tab" type="button" data-go="formula" data-i18n="topFormation">Olusum</button>
+        <button class="top-tab" type="button" data-go="camera">
+          <i data-lucide="camera" class="button-icon" aria-hidden="true"></i>
+          <span data-i18n="topMeasure">Olc</span>
+        </button>
+        <button class="top-tab" type="button" data-go="report">
+          <i data-lucide="chart-spline" class="button-icon" aria-hidden="true"></i>
+          <span data-i18n="topReport">Spektrum</span>
+        </button>
+        <button class="top-tab" type="button" data-go="gallery">
+          <i data-lucide="images" class="button-icon" aria-hidden="true"></i>
+          <span data-i18n="topGallery">Galeri</span>
+        </button>
+        <button class="top-tab" type="button" data-go="formula">
+          <i data-lucide="flask-conical" class="button-icon" aria-hidden="true"></i>
+          <span data-i18n="topFormation">Olusum</span>
+        </button>
       </nav>
 
       <section id="homeView" class="view is-active">
@@ -39,11 +57,13 @@
             Capture a sample with the phone camera, calibrate with pure water, and follow RGB absorbance.
           </p>
           <div class="hero-actions">
-            <button class="primary-button" type="button" data-go="camera" data-i18n="openCamera">
-              Open Camera
+            <button class="primary-button" type="button" data-go="camera">
+              <i data-lucide="camera" class="button-icon" aria-hidden="true"></i>
+              <span data-i18n="openCamera">Open Camera</span>
             </button>
-            <button class="secondary-button" type="button" data-go="report" data-i18n="openReport">
-              Spectrum
+            <button class="secondary-button" type="button" data-go="report">
+              <i data-lucide="chart-spline" class="button-icon" aria-hidden="true"></i>
+              <span data-i18n="openReport">Spectrum</span>
             </button>
           </div>
         </div>
@@ -66,7 +86,10 @@
         <section class="panel">
           <div class="section-row">
             <h2 data-i18n="latestColors">Latest colors</h2>
-            <button class="text-button" type="button" data-go="gallery" data-i18n="seeAll">See all</button>
+            <button class="text-button" type="button" data-go="gallery">
+              <span data-i18n="seeAll">See all</span>
+              <i data-lucide="arrow-right" class="button-icon" aria-hidden="true"></i>
+            </button>
           </div>
           <div id="homeRecentColors" class="color-strip"></div>
         </section>
@@ -84,8 +107,9 @@
 
           <div id="roiBox" class="roi-box" role="slider" tabindex="0" aria-label="ROI selection" aria-valuemin="10" aria-valuemax="80" aria-valuenow="32"></div>
 
-          <button id="startButton" class="start-button" type="button" data-i18n="startCamera">
-            Start Camera
+          <button id="startButton" class="start-button" type="button">
+            <i data-lucide="camera" class="button-icon" aria-hidden="true"></i>
+            <span data-i18n="startCamera">Start Camera</span>
           </button>
 
           <section class="result-panel" aria-label="Detected color result">
@@ -132,17 +156,20 @@
             </div>
 
             <div class="actions">
-              <button id="blankButton" class="secondary-button" type="button" disabled data-i18n="blankRead">
-                Blank Al [Saf Su]
+              <button id="blankButton" class="secondary-button" type="button" disabled>
+                <i data-lucide="droplets" class="button-icon" aria-hidden="true"></i>
+                <span data-i18n="blankRead">Blank Al [Saf Su]</span>
               </button>
-              <button id="sampleButton" class="primary-button" type="button" disabled data-i18n="sampleRead">
-                Numune Oku
+              <button id="sampleButton" class="primary-button" type="button" disabled>
+                <i data-lucide="scan-line" class="button-icon" aria-hidden="true"></i>
+                <span data-i18n="sampleRead">Numune Oku</span>
               </button>
-              <button id="measureButton" class="primary-button" type="button" disabled data-i18n="saveColor">
-                Save Color
+              <button id="measureButton" class="primary-button" type="button" disabled>
+                <i data-lucide="save" class="button-icon" aria-hidden="true"></i>
+                <span data-i18n="saveColor">Save Color</span>
               </button>
-              <button id="retryButton" class="icon-button" type="button" aria-label="Restart camera">
-                R
+              <button id="retryButton" class="icon-button" type="button" aria-label="Restart camera" title="Restart camera">
+                <i data-lucide="rotate-cw" class="button-icon" aria-hidden="true"></i>
               </button>
             </div>
 
@@ -209,11 +236,13 @@
             <span id="measurementCountBadge" class="status-pill">0</span>
           </div>
           <div class="report-actions">
-            <button id="exportMeasurementsButton" class="primary-button" type="button" data-i18n="exportExcel">
-              Excel'e aktar
+            <button id="exportMeasurementsButton" class="primary-button" type="button">
+              <i data-lucide="download" class="button-icon" aria-hidden="true"></i>
+              <span data-i18n="exportExcel">Excel'e aktar</span>
             </button>
-            <button id="clearMeasurementsButton" class="small-button danger" type="button" data-i18n="clearMeasurements">
-              Clear measurements
+            <button id="clearMeasurementsButton" class="small-button danger" type="button">
+              <i data-lucide="trash-2" class="button-icon" aria-hidden="true"></i>
+              <span data-i18n="clearMeasurements">Clear measurements</span>
             </button>
           </div>
           <div class="measurement-table-wrap">
@@ -239,8 +268,9 @@
             <p class="eyebrow" data-i18n="catalog">CATALOG</p>
             <h2 data-i18n="colorGallery">Color gallery</h2>
           </div>
-          <button id="clearGalleryButton" class="small-button danger" type="button" data-i18n="clear">
-            Clear
+          <button id="clearGalleryButton" class="small-button danger" type="button">
+            <i data-lucide="trash-2" class="button-icon" aria-hidden="true"></i>
+            <span data-i18n="clear">Clear</span>
           </button>
         </div>
         <section class="panel gallery-section">
@@ -280,8 +310,9 @@
         <section class="panel">
           <div class="section-row">
             <h2 id="formulaColorTitle">-</h2>
-            <button class="text-button" type="button" data-go="gallery" data-i18n="chooseColor">
-              Choose color
+            <button class="text-button" type="button" data-go="gallery">
+              <i data-lucide="palette" class="button-icon" aria-hidden="true"></i>
+              <span data-i18n="chooseColor">Choose color</span>
             </button>
           </div>
           <div id="recipeList" class="recipe-list"></div>
@@ -301,8 +332,9 @@
           <input id="userNameInput" class="text-input" type="text" maxlength="32" placeholder="" />
           <label class="input-label" for="workspaceInput" data-i18n="workspace">Workspace</label>
           <input id="workspaceInput" class="text-input" type="text" maxlength="42" placeholder="Renk atolyesi" />
-          <button id="saveProfileButton" class="primary-button full" type="button" data-i18n="saveProfile">
-            Save profile
+          <button id="saveProfileButton" class="primary-button full" type="button">
+            <i data-lucide="save" class="button-icon" aria-hidden="true"></i>
+            <span data-i18n="saveProfile">Save profile</span>
           </button>
         </section>
 
@@ -314,28 +346,29 @@
 
       <nav class="bottom-nav" aria-label="Primary">
         <button class="nav-button is-active" type="button" data-view="home">
-          <span>H</span>
+          <i data-lucide="house" class="nav-icon" aria-hidden="true"></i>
           <small data-i18n="navHome">Home</small>
         </button>
         <button class="nav-button" type="button" data-view="camera">
-          <span>C</span>
+          <i data-lucide="camera" class="nav-icon" aria-hidden="true"></i>
           <small data-i18n="navCamera">Camera</small>
         </button>
         <button class="nav-button" type="button" data-view="gallery">
-          <span>G</span>
+          <i data-lucide="images" class="nav-icon" aria-hidden="true"></i>
           <small data-i18n="navGallery">Gallery</small>
         </button>
         <button class="nav-button" type="button" data-view="formula">
-          <span>M</span>
+          <i data-lucide="flask-conical" class="nav-icon" aria-hidden="true"></i>
           <small data-i18n="navMix">Mix</small>
         </button>
         <button class="nav-button" type="button" data-view="profile">
-          <span>P</span>
+          <i data-lucide="user-round" class="nav-icon" aria-hidden="true"></i>
           <small data-i18n="navProfile">Profile</small>
         </button>
       </nav>
     </main>
 
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>
