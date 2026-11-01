@@ -12,11 +12,16 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main class="phone-shell">
+    <main class="phone-shell app-frame">
       <header class="app-header">
-        <div>
-          <p class="eyebrow" data-i18n="appMode">Mobile color studio</p>
-          <h1>Find Color</h1>
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">
+            <i data-lucide="scan-search" class="brand-icon"></i>
+          </div>
+          <div>
+            <p class="eyebrow" data-i18n="appMode">Mobile color studio</p>
+            <h1>Find Color</h1>
+          </div>
         </div>
         <div class="header-actions">
           <button class="small-button" type="button" data-go="profile">
@@ -51,11 +56,12 @@
 
       <section id="homeView" class="view is-active">
         <div class="hero-card">
-          <p class="eyebrow" data-i18n="welcome">Welcome</p>
+          <div class="hero-card-topline">
+            <p class="eyebrow" data-i18n="spectrometer">MOBILE PHOTOSPECTROMETER</p>
+            <span class="status-pill is-online"><i data-lucide="radio" class="status-icon" aria-hidden="true"></i><span data-i18n="ready">Ready</span></span>
+          </div>
           <h2 id="welcomeTitle">Find Color</h2>
-          <p class="muted" data-i18n="homeCopy">
-            Capture a sample with the phone camera, calibrate with pure water, and follow RGB absorbance.
-          </p>
+          <p class="muted" data-i18n="homeCopy">Telefon kamerasiyla numuneyi oku, saf suyla kalibre et ve RGB absorbansini takip et.</p>
           <div class="hero-actions">
             <button class="primary-button" type="button" data-go="camera">
               <i data-lucide="camera" class="button-icon" aria-hidden="true"></i>
@@ -65,6 +71,18 @@
               <i data-lucide="chart-spline" class="button-icon" aria-hidden="true"></i>
               <span data-i18n="openReport">Spectrum</span>
             </button>
+          </div>
+          <div class="instrument-readout" aria-label="RGB channel overview">
+            <div class="readout-heading">
+              <span data-i18n="rgbChannels">RGB 3 kanal</span>
+              <span class="readout-caption" data-i18n="liveSignal">LIVE SIGNAL</span>
+            </div>
+            <div class="signal-bars" aria-hidden="true">
+              <span class="signal-bar red" style="--signal: 76%"></span>
+              <span class="signal-bar green" style="--signal: 54%"></span>
+              <span class="signal-bar blue" style="--signal: 68%"></span>
+            </div>
+            <div class="signal-labels"><span>R</span><span>G</span><span>B</span></div>
           </div>
         </div>
 
