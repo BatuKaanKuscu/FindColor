@@ -26,6 +26,7 @@
 
       <nav class="top-tabs" aria-label="Color tools">
         <button class="top-tab" type="button" data-go="camera" data-i18n="topMeasure">Olc</button>
+        <button class="top-tab" type="button" data-go="report" data-i18n="topReport">Spektrum</button>
         <button class="top-tab" type="button" data-go="gallery" data-i18n="topGallery">Galeri</button>
         <button class="top-tab" type="button" data-go="formula" data-i18n="topFormation">Olusum</button>
       </nav>
@@ -35,14 +36,14 @@
           <p class="eyebrow" data-i18n="welcome">Welcome</p>
           <h2 id="welcomeTitle">Find Color</h2>
           <p class="muted" data-i18n="homeCopy">
-            Save measured colors, browse your gallery, and calculate demo pigment ratios by milliliter.
+            Capture a sample with the phone camera, calibrate with pure water, and follow RGB absorbance.
           </p>
           <div class="hero-actions">
             <button class="primary-button" type="button" data-go="camera" data-i18n="openCamera">
               Open Camera
             </button>
-            <button class="secondary-button" type="button" data-go="gallery" data-i18n="openGallery">
-              Gallery
+            <button class="secondary-button" type="button" data-go="report" data-i18n="openReport">
+              Spectrum
             </button>
           </div>
         </div>
@@ -55,6 +56,10 @@
           <article>
             <span data-i18n="selectedColor">Selected</span>
             <strong id="selectedHex">-</strong>
+          </article>
+          <article>
+            <span data-i18n="measurementCount">Measurements</span>
+            <strong id="measurementCount">0</strong>
           </article>
         </div>
 
@@ -138,6 +143,82 @@
 
             <div id="recentColors" class="color-strip compact"></div>
           </section>
+        </section>
+      </section>
+
+      <section id="reportView" class="view">
+        <section class="report-heading">
+          <div>
+            <p class="eyebrow" data-i18n="spectrometer">MOBILE PHOTOSPECTROMETER</p>
+            <h2 data-i18n="reportTitle">Measurement report</h2>
+            <p class="muted" data-i18n="reportCopy">
+              Compare the RGB channels and export the session for Excel.
+            </p>
+          </div>
+          <span class="status-pill is-online" data-i18n="rgbChannels">RGB 3-channel</span>
+        </section>
+
+        <div class="report-stats">
+          <article>
+            <span data-i18n="measurementCount">Measurements</span>
+            <strong id="reportMeasurementCount">0</strong>
+          </article>
+          <article>
+            <span data-i18n="latestAbsorbance">Latest A mean</span>
+            <strong id="latestAbsorbance">-</strong>
+          </article>
+          <article>
+            <span data-i18n="blankReference">Blank reference</span>
+            <strong id="reportBlankValue">-</strong>
+          </article>
+        </div>
+
+        <section class="panel chart-panel">
+          <div class="section-row">
+            <div>
+              <p class="eyebrow" data-i18n="trend">TREND</p>
+              <h2 data-i18n="chartTitle">Absorbance channels</h2>
+            </div>
+            <span class="chart-legend" aria-label="Chart legend">
+              <i class="legend-dot red"></i><span>R</span>
+              <i class="legend-dot green"></i><span>G</span>
+              <i class="legend-dot blue"></i><span>B</span>
+              <i class="legend-dot mean"></i><span>M</span>
+            </span>
+          </div>
+          <canvas id="absorbanceChart" class="absorbance-chart" width="720" height="280"></canvas>
+          <p id="chartEmpty" class="empty-state" data-i18n="noMeasurements">No measurements yet.</p>
+        </section>
+
+        <section class="panel measurement-panel">
+          <div class="section-row">
+            <div>
+              <p class="eyebrow" data-i18n="session">SESSION</p>
+              <h2 data-i18n="latestMeasurements">Recent measurements</h2>
+            </div>
+            <span id="measurementCountBadge" class="status-pill">0</span>
+          </div>
+          <div class="report-actions">
+            <button id="exportMeasurementsButton" class="primary-button" type="button" data-i18n="exportExcel">
+              Excel'e aktar
+            </button>
+            <button id="clearMeasurementsButton" class="small-button danger" type="button" data-i18n="clearMeasurements">
+              Clear measurements
+            </button>
+          </div>
+          <div class="measurement-table-wrap">
+            <table id="measurementTable" class="measurement-table">
+              <thead>
+                <tr>
+                  <th data-i18n="date">Date</th>
+                  <th data-i18n="sampleRgbShort">Sample RGB</th>
+                  <th data-i18n="absorbanceShort">A mean</th>
+                </tr>
+              </thead>
+              <tbody id="measurementTableBody"></tbody>
+            </table>
+          </div>
+          <p id="measurementEmpty" class="empty-state" data-i18n="noMeasurements">No measurements yet.</p>
         </section>
       </section>
 
@@ -244,7 +325,6 @@
       </nav>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js" defer></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

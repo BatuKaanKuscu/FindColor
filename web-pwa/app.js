@@ -3,25 +3,25 @@ const storageKeys = {
   profile: 'findColor.profile',
   settings: 'findColor.settings',
   selectedColor: 'findColor.selectedColor',
+  measurements: 'findColor.measurements',
 };
 
 const translations = {
   tr: {
-    appMode: 'Mobil renk studyosu',
+    appMode: 'Mobil fotospektrometre',
     welcome: 'Hos geldin',
-    homeCopy: 'Olculen renkleri kaydet, galeride gez ve mililitreye gore demo pigment oranlarini hesapla.',
+    homeCopy: 'Telefon kamerasiyla numuneyi oku, saf suyla kalibre et ve RGB absorbansini takip et.',
     openCamera: 'Kamerayi Ac',
     openGallery: 'Galeri',
-    openAI: 'AI Gorsel',
+    openReport: 'Spektrumu Ac',
     savedColors: 'Kayitli renkler',
     selectedColor: 'Secili',
     latestColors: 'Son renkler',
     seeAll: 'Tumunu gor',
     topMeasure: 'Olc',
+    topReport: 'Spektrum',
     topGallery: 'Galeri',
     topFormation: 'Olusum',
-    topAI: 'AI Kamera',
-    topDevice: 'Cihaz',
     liveCamera: 'CANLI KAMERA',
     centerSampling: 'Merkez olcum',
     roiSelection: 'ROI secimi',
@@ -39,6 +39,24 @@ const translations = {
     blankSaved: 'Saf su blank degeri kaydedildi.',
     sampleSaved: 'Numune okundu.',
     absorbanceReady: 'Absorbans hesaplandi.',
+    spectrometer: 'MOBIL FOTOSPEKTROMETRE',
+    reportTitle: 'Olcum raporu',
+    reportCopy: 'RGB kanallarini karsilastir ve oturumu Excel icin disa aktar.',
+    rgbChannels: 'RGB 3 kanal',
+    measurementCount: 'Olcumler',
+    latestAbsorbance: 'Son A ortalamasi',
+    blankReference: 'Blank referansi',
+    trend: 'TREND',
+    chartTitle: 'Absorbans kanallari',
+    session: 'OTURUM',
+    latestMeasurements: 'Son olcumler',
+    exportExcel: "Excel'e aktar (CSV)",
+    clearMeasurements: 'Olcumleri temizle',
+    clearMeasurementsConfirm: 'Tum olcumler silinsin mi?',
+    date: 'Tarih',
+    sampleRgbShort: 'Numune RGB',
+    absorbanceShort: 'A ort.',
+    noMeasurements: 'Henuz olcum yok.',
     catalog: 'KATALOG',
     colorGallery: 'Renk galerisi',
     clear: 'Temizle',
@@ -50,13 +68,6 @@ const translations = {
     targetMl: 'Hedef miktar (ml)',
     formulaNote: 'Sadece demo pigment orani; endustriyel kimyasal formul degildir.',
     chooseColor: 'Renk sec',
-    device: 'CIHAZ',
-    connectDevice: 'Cihazini bagla',
-    offline: 'Cevrimdisi',
-    online: 'Bagli',
-    pairDevice: 'Demo cihazi eslestir',
-    deviceMl: 'Cihaz miktari (ml)',
-    sendToDevice: 'Receteyi cihaza gonder',
     profile: 'PROFIL',
     profileShort: 'Profil',
     userModule: 'Kullanici modulu',
@@ -68,8 +79,6 @@ const translations = {
     navCamera: 'Kamera',
     navGallery: 'Galeri',
     navMix: 'Karisim',
-    navAI: 'AI',
-    navDevice: 'Cihaz',
     navProfile: 'Profil',
     noColors: 'Henuz renk kaydedilmedi.',
     saved: 'Renk galeriye kaydedildi.',
@@ -86,51 +95,25 @@ const translations = {
     cameraFailed: 'Kamera acilamadi',
     profileSaved: 'Profil kaydedildi.',
     selectColorFirst: 'Once galeriden bir renk sec.',
-    demoConnected: 'Demo cihaz baglandi.',
-    recipeSent: 'Demo paket hazirlandi. Gercek cihaza gonderim simule edildi.',
     clearConfirm: 'Tum kayitli renkler silinsin mi?',
     deleteColor: 'Sil',
     deleteColorConfirm: 'Bu renk silinsin mi?',
-    aiStudio: 'AI STUDYO',
-    aiTitle: 'Grafiti duzenleyici',
-    freeNoToken: 'Token yok',
-    aiColorsTitle: 'Tespit edilen kapatma renkleri',
-    aiColorsEmpty: 'Duzenlemede kullanilacak renkler burada gorunecek.',
-    aiCameraPrompt: 'AI kamerayi ac ve grafitili alanin tamamini kadraja al.',
-    startAICamera: 'AI kamerayi ac',
-    captureAndSendAI: 'Fotografi AI a gonder',
-    aiReady: 'Fotografin tamamini AI ye gonderip grafitiyi yerinde duzenle.',
-    aiCameraStarting: 'AI kamerasi aciliyor...',
-    aiCameraReady: 'Kareyi hazirla, sonra fotografi AI a gonder.',
-    aiPhotoRequired: 'Once AI kamerayi ac.',
-    aiPhotoCaptured: 'Fotograf yakalandi, AI fotografin tamamini inceliyor...',
-    aiVisionFailed: 'Fotograf AI tarafindan okunamadi.',
-    aiModelLoading: 'Ucretsiz duvar duzenleme modeli indiriliyor. Ilk acilista biraz surebilir...',
-    aiInpainting: 'AI duvar dokusunu yeniden olusturuyor...',
-    aiModelFailed: 'Ucretsiz duzenleme modeli yuklenemedi.',
-    aiGenerating: 'Gorsel uretiliyor...',
-    aiGenerated: 'Fotograf AI ile duvar dokusu korunarak duzenlendi.',
-    aiFailed: 'Gorsel uretilirken hata olustu.',
-    aiResult: 'Sonuc',
-    openImage: 'Ac',
-    aiImagePlaceholder: 'Duzenlenmis fotograf burada gorunecek.',
   },
   en: {
-    appMode: 'Mobile color studio',
+    appMode: 'Mobile photospectrometer',
     welcome: 'Welcome',
-    homeCopy: 'Save measured colors, browse your gallery, and calculate demo pigment ratios by milliliter.',
+    homeCopy: 'Read a sample with the phone camera, calibrate with pure water, and track RGB absorbance.',
     openCamera: 'Open Camera',
     openGallery: 'Gallery',
-    openAI: 'AI Image',
+    openReport: 'Open Spectrum',
     savedColors: 'Saved colors',
     selectedColor: 'Selected',
     latestColors: 'Latest colors',
     seeAll: 'See all',
     topMeasure: 'Measure',
+    topReport: 'Spectrum',
     topGallery: 'Gallery',
     topFormation: 'Formation',
-    topAI: 'AI Camera',
-    topDevice: 'Device',
     liveCamera: 'LIVE CAMERA',
     centerSampling: 'Center sampling',
     roiSelection: 'ROI selection',
@@ -148,6 +131,24 @@ const translations = {
     blankSaved: 'Pure water blank saved.',
     sampleSaved: 'Sample read.',
     absorbanceReady: 'Absorbance calculated.',
+    spectrometer: 'MOBILE PHOTOSPECTROMETER',
+    reportTitle: 'Measurement report',
+    reportCopy: 'Compare the RGB channels and export the session for Excel.',
+    rgbChannels: 'RGB 3-channel',
+    measurementCount: 'Measurements',
+    latestAbsorbance: 'Latest A mean',
+    blankReference: 'Blank reference',
+    trend: 'TREND',
+    chartTitle: 'Absorbance channels',
+    session: 'SESSION',
+    latestMeasurements: 'Recent measurements',
+    exportExcel: 'Export CSV for Excel',
+    clearMeasurements: 'Clear measurements',
+    clearMeasurementsConfirm: 'Delete all measurements?',
+    date: 'Date',
+    sampleRgbShort: 'Sample RGB',
+    absorbanceShort: 'A mean',
+    noMeasurements: 'No measurements yet.',
     catalog: 'CATALOG',
     colorGallery: 'Color gallery',
     clear: 'Clear',
@@ -159,13 +160,6 @@ const translations = {
     targetMl: 'Target amount (ml)',
     formulaNote: 'Demo pigment ratios only; not an industrial chemical formula.',
     chooseColor: 'Choose color',
-    device: 'DEVICE',
-    connectDevice: 'Connect device',
-    offline: 'Offline',
-    online: 'Online',
-    pairDevice: 'Pair demo device',
-    deviceMl: 'Device amount (ml)',
-    sendToDevice: 'Send recipe to device',
     profile: 'PROFILE',
     profileShort: 'Profile',
     userModule: 'User module',
@@ -177,8 +171,6 @@ const translations = {
     navCamera: 'Camera',
     navGallery: 'Gallery',
     navMix: 'Mix',
-    navAI: 'AI',
-    navDevice: 'Device',
     navProfile: 'Profile',
     noColors: 'No saved colors yet.',
     saved: 'Color saved to gallery.',
@@ -195,34 +187,9 @@ const translations = {
     cameraFailed: 'Camera could not be opened',
     profileSaved: 'Profile saved.',
     selectColorFirst: 'Choose a color from the gallery first.',
-    demoConnected: 'Demo device connected.',
-    recipeSent: 'Demo packet prepared. Real device transfer was simulated.',
     clearConfirm: 'Delete all saved colors?',
     deleteColor: 'Delete',
     deleteColorConfirm: 'Delete this color?',
-    aiStudio: 'AI STUDIO',
-    aiTitle: 'Graffiti editor',
-    freeNoToken: 'No token',
-    aiColorsTitle: 'Detected cover colors',
-    aiColorsEmpty: 'Colors used by the edit will appear here.',
-    aiCameraPrompt: 'Open the AI camera and frame the full graffiti photo.',
-    startAICamera: 'Open AI camera',
-    captureAndSendAI: 'Send photo to AI',
-    aiReady: 'Send the full photo to AI and edit the graffiti in place.',
-    aiCameraStarting: 'Opening AI camera...',
-    aiCameraReady: 'Frame the shot, then send the photo to AI.',
-    aiPhotoRequired: 'Open the AI camera first.',
-    aiPhotoCaptured: 'Photo captured. AI is reading the full photo...',
-    aiVisionFailed: 'AI could not read the photo.',
-    aiModelLoading: 'Loading the free wall editing model. The first load may take a moment...',
-    aiInpainting: 'AI is reconstructing the wall texture...',
-    aiModelFailed: 'The free editing model could not be loaded.',
-    aiGenerating: 'Generating image...',
-    aiGenerated: 'The photo was edited with AI while preserving the wall texture.',
-    aiFailed: 'The image could not be generated.',
-    aiResult: 'Result',
-    openImage: 'Open',
-    aiImagePlaceholder: 'Your edited photo will appear here.',
   },
 };
 
@@ -314,6 +281,18 @@ const blankRgbValue = document.querySelector('#blankRgbValue');
 const sampleRgbValue = document.querySelector('#sampleRgbValue');
 const absorbanceValue = document.querySelector('#absorbanceValue');
 const absorbanceStatus = document.querySelector('#absorbanceStatus');
+const measurementCount = document.querySelector('#measurementCount');
+const reportMeasurementCount = document.querySelector('#reportMeasurementCount');
+const latestAbsorbance = document.querySelector('#latestAbsorbance');
+const reportBlankValue = document.querySelector('#reportBlankValue');
+const measurementCountBadge = document.querySelector('#measurementCountBadge');
+const absorbanceChart = document.querySelector('#absorbanceChart');
+const chartEmpty = document.querySelector('#chartEmpty');
+const measurementTable = document.querySelector('#measurementTable');
+const measurementTableBody = document.querySelector('#measurementTableBody');
+const measurementEmpty = document.querySelector('#measurementEmpty');
+const exportMeasurementsButton = document.querySelector('#exportMeasurementsButton');
+const clearMeasurementsButton = document.querySelector('#clearMeasurementsButton');
 const languageButton = document.querySelector('#languageButton');
 const userNameInput = document.querySelector('#userNameInput');
 const workspaceInput = document.querySelector('#workspaceInput');
@@ -322,7 +301,6 @@ const welcomeTitle = document.querySelector('#welcomeTitle');
 const themePalette = document.querySelector('#themePalette');
 const context = canvas.getContext('2d', { willReadFrequently: true });
 
-const measurementSize = 50;
 const sampleStep = 2;
 const analysisIntervalMs = 400;
 let stream = null;
@@ -334,6 +312,10 @@ let roi = { x: 0.36, y: 0.2, size: 0.3 };
 let roiDrag = null;
 
 let colors = readJson(storageKeys.colors, []);
+let measurements = readJson(storageKeys.measurements, []);
+if (!Array.isArray(measurements)) {
+  measurements = [];
+}
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
 let settings = readJson(storageKeys.settings, { language: 'tr', accent: '#4dd0e1' });
 let selectedColor = readJson(storageKeys.selectedColor, colors[0] || null);
@@ -384,6 +366,9 @@ function setView(viewName) {
     stopCamera();
   }
 
+  if (viewName === 'report') {
+    window.requestAnimationFrame(drawAbsorbanceChart);
+  }
 }
 
 function applyLanguage() {
@@ -604,8 +589,217 @@ function captureSample() {
   const result = calculateAbsorbance(blankRgb, sampleRgb);
   sampleRgbValue.textContent = formatRgb(sampleRgb);
   absorbanceValue.textContent = `${result.mean.toFixed(3)} (R ${result.red.toFixed(3)} / G ${result.green.toFixed(3)} / B ${result.blue.toFixed(3)})`;
+  saveMeasurementRecord(result, sampleRgb);
   absorbanceStatus.textContent = t('sampleSaved');
   setStatus(t('absorbanceReady'));
+}
+
+function getRgbValues(color) {
+  return {
+    red: Number(color?.red) || 0,
+    green: Number(color?.green) || 0,
+    blue: Number(color?.blue) || 0,
+  };
+}
+
+function saveMeasurementRecord(absorbance, sample) {
+  const measurement = {
+    id: globalThis.crypto?.randomUUID ? globalThis.crypto.randomUUID() : String(Date.now()),
+    createdAt: new Date().toISOString(),
+    blank: getRgbValues(blankRgb),
+    sample: getRgbValues(sample),
+    absorbance: {
+      red: Number(absorbance.red) || 0,
+      green: Number(absorbance.green) || 0,
+      blue: Number(absorbance.blue) || 0,
+      mean: Number(absorbance.mean) || 0,
+    },
+    roi: { ...roi },
+  };
+
+  measurements = [measurement, ...measurements].slice(0, 100);
+  writeJson(storageKeys.measurements, measurements);
+  renderAll();
+}
+
+function formatAbsorbance(value) {
+  return Number.isFinite(Number(value)) ? Number(value).toFixed(3) : '-';
+}
+
+function formatMeasurementDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+
+  return new Intl.DateTimeFormat(settings.language === 'tr' ? 'tr-TR' : 'en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
+function drawAbsorbanceChart() {
+  if (!absorbanceChart) {
+    return;
+  }
+
+  const width = Math.max(280, absorbanceChart.clientWidth || 720);
+  const height = 280;
+  const pixelRatio = window.devicePixelRatio || 1;
+  absorbanceChart.width = Math.floor(width * pixelRatio);
+  absorbanceChart.height = Math.floor(height * pixelRatio);
+  absorbanceChart.style.height = `${height}px`;
+
+  const chartContext = absorbanceChart.getContext('2d');
+  chartContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+  chartContext.clearRect(0, 0, width, height);
+  chartContext.fillStyle = '#0b0d10';
+  chartContext.fillRect(0, 0, width, height);
+
+  const series = measurements.slice(0, 24).reverse();
+  chartEmpty.hidden = series.length > 0;
+  if (!series.length) {
+    return;
+  }
+
+  const values = series.flatMap((item) => [
+    Number(item.absorbance?.red) || 0,
+    Number(item.absorbance?.green) || 0,
+    Number(item.absorbance?.blue) || 0,
+    Number(item.absorbance?.mean) || 0,
+  ]);
+  const maxValue = Math.max(0.1, Math.ceil(Math.max(...values, 0) * 10) / 10);
+  const plot = { left: 38, right: 12, top: 18, bottom: 30 };
+  const plotWidth = width - plot.left - plot.right;
+  const plotHeight = height - plot.top - plot.bottom;
+  const colorsByChannel = {
+    red: '#ff7a90',
+    green: '#6ee7b7',
+    blue: '#69a7ff',
+    mean: '#f8c146',
+  };
+
+  chartContext.font = '11px system-ui, sans-serif';
+  chartContext.textBaseline = 'middle';
+  for (let step = 0; step <= 4; step += 1) {
+    const value = (maxValue / 4) * step;
+    const y = plot.top + plotHeight - (plotHeight * step) / 4;
+    chartContext.strokeStyle = 'rgb(255 255 255 / 10%)';
+    chartContext.lineWidth = 1;
+    chartContext.beginPath();
+    chartContext.moveTo(plot.left, y);
+    chartContext.lineTo(width - plot.right, y);
+    chartContext.stroke();
+    chartContext.fillStyle = '#aeb7c2';
+    chartContext.textAlign = 'right';
+    chartContext.fillText(value.toFixed(1), plot.left - 8, y);
+  }
+
+  chartContext.strokeStyle = 'rgb(255 255 255 / 22%)';
+  chartContext.beginPath();
+  chartContext.moveTo(plot.left, plot.top);
+  chartContext.lineTo(plot.left, height - plot.bottom);
+  chartContext.lineTo(width - plot.right, height - plot.bottom);
+  chartContext.stroke();
+
+  const drawSeries = (channel) => {
+    chartContext.strokeStyle = colorsByChannel[channel];
+    chartContext.lineWidth = channel === 'mean' ? 2.5 : 2;
+    chartContext.lineJoin = 'round';
+    chartContext.lineCap = 'round';
+    chartContext.beginPath();
+    series.forEach((item, index) => {
+      const x = series.length === 1
+        ? plot.left + plotWidth / 2
+        : plot.left + (plotWidth * index) / (series.length - 1);
+      const value = Number(item.absorbance?.[channel]) || 0;
+      const y = plot.top + plotHeight - (value / maxValue) * plotHeight;
+      if (index === 0) {
+        chartContext.moveTo(x, y);
+      } else {
+        chartContext.lineTo(x, y);
+      }
+    });
+    chartContext.stroke();
+  };
+
+  ['red', 'green', 'blue', 'mean'].forEach(drawSeries);
+  chartContext.fillStyle = '#aeb7c2';
+  chartContext.textAlign = 'center';
+  chartContext.fillText(`1-${series.length}`, plot.left + plotWidth / 2, height - 12);
+}
+
+function renderMeasurements() {
+  const count = measurements.length;
+  measurementCount.textContent = String(count);
+  reportMeasurementCount.textContent = String(count);
+  measurementCountBadge.textContent = String(count);
+
+  const latest = measurements[0];
+  latestAbsorbance.textContent = latest ? formatAbsorbance(latest.absorbance?.mean) : '-';
+  reportBlankValue.textContent = latest ? formatRgb(latest.blank) : '-';
+  measurementTableBody.innerHTML = '';
+  measurementTable.hidden = count === 0;
+  measurementEmpty.hidden = count > 0;
+
+  measurements.slice(0, 30).forEach((measurement) => {
+    const row = document.createElement('tr');
+    const sample = measurement.sample || {};
+    const absorbance = measurement.absorbance || {};
+    row.innerHTML = `
+      <td>${formatMeasurementDate(measurement.createdAt)}</td>
+      <td>${formatRgb(sample)}<small>R ${sample.red ?? '-'} / G ${sample.green ?? '-'} / B ${sample.blue ?? '-'}</small></td>
+      <td><strong>${formatAbsorbance(absorbance.mean)}</strong><small>R ${formatAbsorbance(absorbance.red)} / G ${formatAbsorbance(absorbance.green)} / B ${formatAbsorbance(absorbance.blue)}</small></td>
+    `;
+    measurementTableBody.append(row);
+  });
+
+  drawAbsorbanceChart();
+}
+
+function csvCell(value) {
+  const text = String(value ?? '');
+  return /[;"\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function csvNumber(value) {
+  return formatAbsorbance(value).replace('.', ',');
+}
+
+function exportMeasurementsCsv() {
+  if (!measurements.length) {
+    setView('report');
+    return;
+  }
+
+  const rows = [
+    ['Tarih', 'Blank R', 'Blank G', 'Blank B', 'Numune R', 'Numune G', 'Numune B', 'A R', 'A G', 'A B', 'A Ortalama'],
+    ...measurements.map((measurement) => [
+      measurement.createdAt,
+      measurement.blank?.red,
+      measurement.blank?.green,
+      measurement.blank?.blue,
+      measurement.sample?.red,
+      measurement.sample?.green,
+      measurement.sample?.blue,
+      csvNumber(measurement.absorbance?.red),
+      csvNumber(measurement.absorbance?.green),
+      csvNumber(measurement.absorbance?.blue),
+      csvNumber(measurement.absorbance?.mean),
+    ]),
+  ];
+  const csv = rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `find-color-olcumler-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function stopCamera() {
@@ -738,369 +932,6 @@ function buildCameraErrorMessage(error) {
 
   const detail = error?.message || name;
   return detail ? `${t('cameraFailed')}: ${detail}` : t('cameraFailed');
-}
-
-function setAIStatus(message, isError = false) {
-  aiStatusText.textContent = message;
-  aiStatusText.classList.toggle('is-error', isError);
-}
-
-async function buildGraffitiAnalysisFromPhoto(imageDataUrl) {
-  const payload = {
-    model: 'openai',
-    private: true,
-    referrer: 'find-color-pwa',
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'text',
-            text: 'Look at the full wall photo. Locate only the graffiti and identify the paint colors needed to cover it while matching the surrounding wall. Return only valid JSON in this exact shape: {"graffiti":{"x":0.0,"y":0.0,"width":0.0,"height":0.0},"coverColor":{"name":"wall paint","hex":"#FFFFFF"},"colors":[{"name":"wall paint","hex":"#FFFFFF","percentage":100}]}. Coordinates must be normalized from 0 to 1 relative to the full image. The box must cover only the graffiti, not the whole photo. Return 2 to 5 visible wall or cover colors with valid six-digit hex values. No markdown and no explanation.',
-          },
-          {
-            type: 'image_url',
-            image_url: {
-              url: imageDataUrl,
-            },
-          },
-        ],
-      },
-    ],
-  };
-
-  const response = await fetch('https://text.pollinations.ai/openai', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const result = await response.json();
-  const content = result?.choices?.[0]?.message?.content;
-  const raw = typeof content === 'string' ? content : JSON.stringify(content || '');
-  const jsonText = raw.match(/\{[\s\S]*\}/)?.[0];
-
-  if (!jsonText) {
-    return null;
-  }
-
-  try {
-    const analysis = JSON.parse(jsonText);
-    const region = analysis.graffiti || analysis.region || analysis;
-    const x = Number(region.x);
-    const y = Number(region.y);
-    const width = Number(region.width);
-    const height = Number(region.height);
-
-    if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) {
-      return null;
-    }
-
-    const colors = (Array.isArray(analysis.colors) ? analysis.colors : [])
-      .map((color) => ({
-        name: String(color.name || t('savedColor')),
-        hex: normalizeHex(color.hex),
-        percentage: Number(color.percentage),
-      }))
-      .filter((color) => color.hex)
-      .slice(0, 5);
-    const coverColor = analysis.coverColor && normalizeHex(analysis.coverColor.hex)
-      ? {
-          name: String(analysis.coverColor.name || t('savedColor')),
-          hex: normalizeHex(analysis.coverColor.hex),
-        }
-      : colors[0] || null;
-
-    return {
-      region: {
-        x: Math.max(0, Math.min(1, x)),
-        y: Math.max(0, Math.min(1, y)),
-        width: Math.max(0.04, Math.min(1, width)),
-        height: Math.max(0.04, Math.min(1, height)),
-      },
-      colors,
-      coverColor,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function normalizeHex(value) {
-  const match = String(value || '').trim().match(/^#?([0-9a-f]{6})$/i);
-  return match ? `#${match[1].toUpperCase()}` : null;
-}
-
-function renderAIDetectedColors(colors, coverColor) {
-  const palette = [...(colors || [])];
-
-  if (selectedColor && !palette.some((color) => color.hex === selectedColor.hex)) {
-    palette.unshift({
-      name: settings.language === 'tr' ? 'Secili kapatma rengi' : 'Selected cover color',
-      hex: selectedColor.hex,
-      percentage: null,
-    });
-  }
-
-  if (coverColor && !palette.some((color) => color.hex === coverColor.hex)) {
-    palette.unshift({ ...coverColor, percentage: null });
-  }
-
-  aiDetectedColors.innerHTML = '';
-  aiColorCount.textContent = String(palette.length);
-
-  if (!palette.length) {
-    const empty = document.createElement('span');
-    empty.className = 'muted';
-    empty.textContent = t('aiColorsEmpty');
-    aiDetectedColors.append(empty);
-    return;
-  }
-
-  palette.forEach((color) => {
-    const item = document.createElement('div');
-    item.className = 'ai-color-item';
-    const percentage = Number.isFinite(color.percentage) ? ` ${Math.round(color.percentage)}%` : '';
-    const swatch = document.createElement('span');
-    swatch.className = 'ai-color-swatch';
-    swatch.style.setProperty('--ai-color', color.hex);
-    const copy = document.createElement('span');
-    copy.className = 'ai-color-copy';
-    const name = document.createElement('strong');
-    name.textContent = color.name;
-    const value = document.createElement('small');
-    value.textContent = `${color.hex}${percentage}`;
-    copy.append(name, value);
-    item.append(swatch, copy);
-    aiDetectedColors.append(item);
-  });
-}
-
-function loadImage(dataUrl) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = dataUrl;
-  });
-}
-
-function clampRegion(region) {
-  const fallback = { x: 0.2, y: 0.2, width: 0.6, height: 0.6 };
-  const source = region || fallback;
-  const width = Math.max(0.04, Math.min(1, source.width));
-  const height = Math.max(0.04, Math.min(1, source.height));
-
-  return {
-    x: Math.max(0, Math.min(1 - width, source.x)),
-    y: Math.max(0, Math.min(1 - height, source.y)),
-    width,
-    height,
-  };
-}
-
-function getLamaSession() {
-  if (!globalThis.ort) {
-    return Promise.reject(new Error(t('aiModelFailed')));
-  }
-
-  if (!lamaSessionPromise) {
-    globalThis.ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/';
-    lamaSessionPromise = (async () => {
-      try {
-        return await globalThis.ort.InferenceSession.create(lamaModelUrl, {
-          executionProviders: globalThis.navigator?.gpu ? ['webgpu', 'wasm'] : ['wasm'],
-          graphOptimizationLevel: 'all',
-        });
-      } catch (error) {
-        if (!globalThis.navigator?.gpu) {
-          throw error;
-        }
-
-        return globalThis.ort.InferenceSession.create(lamaModelUrl, {
-          executionProviders: ['wasm'],
-          graphOptimizationLevel: 'all',
-        });
-      }
-    })().catch((error) => {
-      lamaSessionPromise = null;
-      throw error;
-    });
-  }
-
-  return lamaSessionPromise;
-}
-
-function getInpaintCrop(image, graffitiRegion) {
-  const imageWidth = image.naturalWidth || image.width;
-  const imageHeight = image.naturalHeight || image.height;
-  const region = clampRegion(graffitiRegion);
-  const graffitiX = region.x * imageWidth;
-  const graffitiY = region.y * imageHeight;
-  const graffitiWidth = region.width * imageWidth;
-  const graffitiHeight = region.height * imageHeight;
-  const side = Math.min(
-    Math.min(imageWidth, imageHeight),
-    Math.max(graffitiWidth, graffitiHeight) * 2.4,
-  );
-  const centerX = graffitiX + graffitiWidth / 2;
-  const centerY = graffitiY + graffitiHeight / 2;
-
-  return {
-    x: Math.max(0, Math.min(imageWidth - side, centerX - side / 2)),
-    y: Math.max(0, Math.min(imageHeight - side, centerY - side / 2)),
-    side,
-    region,
-  };
-}
-
-function buildLamaInput(image, crop) {
-  const cropCanvas = document.createElement('canvas');
-  cropCanvas.width = lamaInputSize;
-  cropCanvas.height = lamaInputSize;
-  const cropContext = cropCanvas.getContext('2d', { willReadFrequently: true });
-  cropContext.drawImage(image, crop.x, crop.y, crop.side, crop.side, 0, 0, lamaInputSize, lamaInputSize);
-
-  const pixels = cropContext.getImageData(0, 0, lamaInputSize, lamaInputSize).data;
-  const input = new Float32Array(4 * lamaInputSize * lamaInputSize);
-  const planeSize = lamaInputSize * lamaInputSize;
-  const imageWidth = image.naturalWidth || image.width;
-  const imageHeight = image.naturalHeight || image.height;
-  const graffitiX = ((crop.region.x * imageWidth - crop.x) / crop.side) * lamaInputSize;
-  const graffitiY = ((crop.region.y * imageHeight - crop.y) / crop.side) * lamaInputSize;
-  const graffitiWidth = ((crop.region.width * imageWidth) / crop.side) * lamaInputSize;
-  const graffitiHeight = ((crop.region.height * imageHeight) / crop.side) * lamaInputSize;
-  const padding = Math.max(5, Math.round(Math.min(graffitiWidth, graffitiHeight) * 0.08));
-
-  for (let y = 0; y < lamaInputSize; y += 1) {
-    for (let x = 0; x < lamaInputSize; x += 1) {
-      const pixelIndex = y * lamaInputSize + x;
-      const sourceIndex = pixelIndex * 4;
-      const masked =
-        x >= graffitiX - padding &&
-        x <= graffitiX + graffitiWidth + padding &&
-        y >= graffitiY - padding &&
-        y <= graffitiY + graffitiHeight + padding;
-
-      input[pixelIndex] = masked ? 0 : pixels[sourceIndex] / 255;
-      input[planeSize + pixelIndex] = masked ? 0 : pixels[sourceIndex + 1] / 255;
-      input[planeSize * 2 + pixelIndex] = masked ? 0 : pixels[sourceIndex + 2] / 255;
-      input[planeSize * 3 + pixelIndex] = masked ? 1 : 0;
-    }
-  }
-
-  return {
-    tensor: new globalThis.ort.Tensor('float32', input, [1, 4, lamaInputSize, lamaInputSize]),
-    cropCanvas,
-    mask: {
-      x: graffitiX - padding,
-      y: graffitiY - padding,
-      width: graffitiWidth + padding * 2,
-      height: graffitiHeight + padding * 2,
-    },
-  };
-}
-
-function lamaOutputToCanvas(outputTensor) {
-  const outputCanvas = document.createElement('canvas');
-  outputCanvas.width = lamaInputSize;
-  outputCanvas.height = lamaInputSize;
-  const outputContext = outputCanvas.getContext('2d');
-  const imageData = outputContext.createImageData(lamaInputSize, lamaInputSize);
-  const planeSize = lamaInputSize * lamaInputSize;
-
-  for (let index = 0; index < planeSize; index += 1) {
-    imageData.data[index * 4] = Math.max(0, Math.min(255, Math.round(outputTensor.data[index] * 255)));
-    imageData.data[index * 4 + 1] = Math.max(0, Math.min(255, Math.round(outputTensor.data[planeSize + index] * 255)));
-    imageData.data[index * 4 + 2] = Math.max(0, Math.min(255, Math.round(outputTensor.data[planeSize * 2 + index] * 255)));
-    imageData.data[index * 4 + 3] = 255;
-  }
-
-  outputContext.putImageData(imageData, 0, 0);
-  return outputCanvas;
-}
-
-async function renderLamaInpaintedPhoto(imageDataUrl, graffitiRegion) {
-  const image = await loadImage(imageDataUrl);
-  setAIStatus(t('aiModelLoading'));
-  const session = await getLamaSession();
-  const crop = getInpaintCrop(image, graffitiRegion);
-  const { tensor, cropCanvas, mask } = buildLamaInput(image, crop);
-  setAIStatus(t('aiInpainting'));
-  const output = await session.run({ input: tensor });
-  const outputTensor = output.output || Object.values(output)[0];
-  const inpaintedCrop = lamaOutputToCanvas(outputTensor);
-
-  const outputCanvas = document.createElement('canvas');
-  outputCanvas.width = image.naturalWidth || image.width;
-  outputCanvas.height = image.naturalHeight || image.height;
-  const outputContext = outputCanvas.getContext('2d');
-  outputContext.drawImage(image, 0, 0, outputCanvas.width, outputCanvas.height);
-
-  const maskScale = crop.side / lamaInputSize;
-  const maskX = crop.x + mask.x * maskScale;
-  const maskY = crop.y + mask.y * maskScale;
-  const maskWidth = mask.width * maskScale;
-  const maskHeight = mask.height * maskScale;
-  outputContext.save();
-  outputContext.beginPath();
-  outputContext.rect(maskX, maskY, maskWidth, maskHeight);
-  outputContext.clip();
-  outputContext.drawImage(inpaintedCrop, crop.x, crop.y, crop.side, crop.side);
-  outputContext.restore();
-
-  cropCanvas.width = 0;
-  cropCanvas.height = 0;
-  const resultDataUrl = outputCanvas.toDataURL('image/jpeg', 0.92);
-  captureAIPhotoButton.disabled = false;
-  generatedImage.src = resultDataUrl;
-  generatedImage.alt = t('aiResult');
-  openGeneratedImageLink.href = resultDataUrl;
-  openGeneratedImageLink.classList.remove('is-disabled');
-  aiImageFrame.classList.add('has-image');
-  aiImagePlaceholder.textContent = t('aiGenerated');
-  setAIStatus(t('aiGenerated'));
-}
-
-async function captureAndGenerateAIPhoto() {
-  let imageDataUrl;
-
-  try {
-    imageDataUrl = captureAIPhotoDataUrl();
-  } catch (error) {
-    setAIStatus(error.message || t('aiPhotoRequired'), true);
-    return;
-  }
-
-  capturedAIPhoto.src = imageDataUrl;
-  capturedAIPhoto.alt = t('captureAndSendAI');
-  aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
-  aiCameraFeed.closest('.ai-camera-frame').classList.add('has-capture');
-
-  try {
-    startAICameraButton.disabled = true;
-    captureAIPhotoButton.disabled = true;
-    setAIStatus(t('aiPhotoCaptured'));
-
-    const analysis = await buildGraffitiAnalysisFromPhoto(imageDataUrl);
-    if (!analysis) {
-      throw new Error(t('aiVisionFailed'));
-    }
-
-    renderAIDetectedColors(analysis.colors, analysis.coverColor);
-    await renderLamaInpaintedPhoto(imageDataUrl, analysis.region);
-  } catch (error) {
-    setAIStatus(`${t('aiVisionFailed')} ${error.message || ''}`.trim(), true);
-    captureAIPhotoButton.disabled = false;
-  } finally {
-    startAICameraButton.disabled = false;
-  }
 }
 
 function saveLiveColor() {
@@ -1397,6 +1228,7 @@ function renderAll() {
   renderColorStrip(homeRecentColors, 8);
   renderGallery();
   renderFormula();
+  renderMeasurements();
   renderThemePalette();
   renderProfile();
 }
@@ -1419,7 +1251,19 @@ roiBox.addEventListener('pointermove', handleROIMove);
 roiBox.addEventListener('pointerup', handleROIEnd);
 roiBox.addEventListener('pointercancel', handleROIEnd);
 window.addEventListener('resize', syncROIBox);
+window.addEventListener('resize', drawAbsorbanceChart);
 mlInput.addEventListener('input', renderFormula);
+exportMeasurementsButton.addEventListener('click', exportMeasurementsCsv);
+
+clearMeasurementsButton.addEventListener('click', () => {
+  if (!measurements.length || !window.confirm(t('clearMeasurementsConfirm'))) {
+    return;
+  }
+
+  measurements = [];
+  writeJson(storageKeys.measurements, measurements);
+  renderAll();
+});
 
 clearGalleryButton.addEventListener('click', () => {
   if (!window.confirm(t('clearConfirm'))) {
