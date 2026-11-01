@@ -56,7 +56,10 @@ const translations = {
     chartTitle: 'Absorbans kanallari',
     session: 'OTURUM',
     latestMeasurements: 'Son olcumler',
-    exportExcel: "Excel'e aktar (CSV)",
+    exportExcel: "Grafikli Excel'e aktar",
+    exportSaved: 'Grafikli Excel dosyasi hazirlandi.',
+    exportFallback: 'Excel kutuphanesi yuklenemedi; CSV disa aktarildi.',
+    exportFailed: 'Excel dosyasi olusturulamadi.',
     clearMeasurements: 'Olcumleri temizle',
     clearMeasurementsConfirm: 'Tum olcumler silinsin mi?',
     date: 'Tarih',
@@ -163,7 +166,10 @@ const translations = {
     chartTitle: 'Absorbance channels',
     session: 'SESSION',
     latestMeasurements: 'Recent measurements',
-    exportExcel: 'Export CSV for Excel',
+    exportExcel: 'Export Excel with chart',
+    exportSaved: 'Excel file with chart is ready.',
+    exportFallback: 'Excel library could not load; CSV was exported instead.',
+    exportFailed: 'The Excel file could not be created.',
     clearMeasurements: 'Clear measurements',
     clearMeasurementsConfirm: 'Delete all measurements?',
     date: 'Date',
@@ -931,6 +937,125 @@ function exportMeasurementsCsv() {
   URL.revokeObjectURL(url);
 }
 
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function exportMeasurementsExcel() {
+  if (!measurements.length) {
+    setView('report');
+    return;
+  }
+
+  if (!globalThis.ExcelJS) {
+    exportMeasurementsCsv();
+    setStatus(t('exportFallback'), true);
+    return;
+  }
+
+  try {
+    drawAbsorbanceChart();
+    const workbook = new globalThis.ExcelJS.Workbook();
+    workbook.creator = 'Find Color';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    const dataSheet = workbook.addWorksheet(settings.language === 'tr' ? 'Olcumler' : 'Measurements');
+    const headers = [
+      t('date'),
+      'Blank R',
+      'Blank G',
+      'Blank B',
+      'Numune R',
+      'Numune G',
+      'Numune B',
+      'A R',
+      'A G',
+      'A B',
+      'A Ortalama',
+      t('interpretation'),
+    ];
+    const rows = measurements.map((measurement, index) => [
+      new Date(measurement.createdAt),
+      measurement.blank?.red ?? null,
+      measurement.blank?.green ?? null,
+      measurement.blank?.blue ?? null,
+      measurement.sample?.red ?? null,
+      measurement.sample?.green ?? null,
+      measurement.sample?.blue ?? null,
+      Number(measurement.absorbance?.red) || 0,
+      Number(measurement.absorbance?.green) || 0,
+      Number(measurement.absorbance?.blue) || 0,
+      Number(measurement.absorbance?.mean) || 0,
+      getMeasurementInterpretation(measurement, measurements[index + 1]),
+    ]);
+
+    dataSheet.addRow(headers);
+    rows.forEach((row) => dataSheet.addRow(row));
+    dataSheet.views = [{ state: 'frozen', ySplit: 1 }];
+    dataSheet.autoFilter = { from: 'A1', to: `L${rows.length + 1}` };
+    dataSheet.columns = [
+      { key: 'date', width: 22 },
+      { key: 'blankRed', width: 11 },
+      { key: 'blankGreen', width: 11 },
+      { key: 'blankBlue', width: 11 },
+      { key: 'sampleRed', width: 12 },
+      { key: 'sampleGreen', width: 12 },
+      { key: 'sampleBlue', width: 12 },
+      { key: 'absorbanceRed', width: 10 },
+      { key: 'absorbanceGreen', width: 10 },
+      { key: 'absorbanceBlue', width: 10 },
+      { key: 'absorbanceMean', width: 13 },
+      { key: 'interpretation', width: 42 },
+    ];
+    dataSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    dataSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF163B43' } };
+    dataSheet.getRow(1).alignment = { vertical: 'middle', wrapText: true };
+    dataSheet.getRow(1).height = 28;
+    dataSheet.getColumn(1).numFmt = 'dd.mm.yyyy hh:mm';
+    [8, 9, 10, 11].forEach((columnNumber) => {
+      dataSheet.getColumn(columnNumber).numFmt = '0.000';
+    });
+    dataSheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1 && rowNumber % 2 === 0) {
+        row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEAF4F2' } };
+      }
+      row.alignment = { vertical: 'top', wrapText: true };
+    });
+
+    const chartSheet = workbook.addWorksheet(settings.language === 'tr' ? 'Grafik' : 'Chart');
+    chartSheet.views = [{ showGridLines: false }];
+    chartSheet.getCell('A1').value = t('chartTitle');
+    chartSheet.getCell('A1').font = { bold: true, size: 16, color: { argb: 'FF163B43' } };
+    chartSheet.getCell('A2').value = t('reportCopy');
+    chartSheet.getCell('A2').font = { italic: true, color: { argb: 'FF5B6870' } };
+    chartSheet.getColumn(1).width = 18;
+    const imageId = workbook.addImage({
+      base64: absorbanceChart.toDataURL('image/png'),
+      extension: 'png',
+    });
+    chartSheet.addImage(imageId, { tl: { col: 0, row: 3 }, ext: { width: 720, height: 280 } });
+    chartSheet.getCell('A21').value = `${t('measurementCount')}: ${measurements.length}`;
+    chartSheet.getCell('A21').font = { bold: true, color: { argb: 'FF163B43' } };
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    downloadBlob(
+      new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+      `find-color-olcumler-${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+    setStatus(t('exportSaved'));
+  } catch {
+    setStatus(t('exportFailed'), true);
+  }
+}
+
 function stopCamera() {
   if (analysisTimer) {
     window.clearInterval(analysisTimer);
@@ -1383,7 +1508,7 @@ roiBox.addEventListener('pointercancel', handleROIEnd);
 window.addEventListener('resize', syncROIBox);
 window.addEventListener('resize', drawAbsorbanceChart);
 mlInput.addEventListener('input', renderFormula);
-exportMeasurementsButton.addEventListener('click', exportMeasurementsCsv);
+exportMeasurementsButton.addEventListener('click', exportMeasurementsExcel);
 
 clearMeasurementsButton.addEventListener('click', () => {
   if (!measurements.length || !window.confirm(t('clearMeasurementsConfirm'))) {

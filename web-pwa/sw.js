@@ -1,4 +1,4 @@
-const CACHE_NAME = 'find-color-pwa-v18';
+const CACHE_NAME = 'find-color-pwa-v20';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,7 @@ const ASSETS = [
   './app.js',
   './manifest.webmanifest',
   './icons/icon.svg',
+  './vendor/exceljs.min.js',
 ];
 
 self.addEventListener('install', (event) => {
