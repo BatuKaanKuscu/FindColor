@@ -127,6 +127,22 @@ input:focus-visible {
   gap: 6px;
 }
 
+.header-icon-button {
+  width: 38px;
+  min-height: 38px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .top-tabs {
   position: sticky;
   top: max(0px, env(safe-area-inset-top));
@@ -1152,4 +1168,17 @@ h2 {
     min-height: 100svh;
     border-inline: 1px solid #172126;
   }
+}
+
+:fullscreen .phone-shell,
+:-webkit-full-screen .phone-shell {
+  width: 100vw;
+  max-width: none;
+  border-inline: 0;
+}
+
+:fullscreen .bottom-nav,
+:-webkit-full-screen .bottom-nav {
+  right: 18px;
+  left: 18px;
 }

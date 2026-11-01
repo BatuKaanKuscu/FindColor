@@ -41,6 +41,10 @@ const translations = {
     absorbanceReady: 'Absorbans hesaplandi.',
     ready: 'Hazir',
     liveSignal: 'CANLI SINYAL',
+    fullscreen: 'Tam ekran',
+    exitFullscreen: 'Tam ekrandan cik',
+    fullscreenUnsupported: 'Bu tarayici tam ekran modunu desteklemiyor.',
+    fullscreenFailed: 'Tam ekran acilamadi.',
     spectrometer: 'MOBIL FOTOSPEKTROMETRE',
     reportTitle: 'Olcum raporu',
     reportCopy: 'RGB kanallarini karsilastir ve oturumu Excel icin disa aktar.',
@@ -144,6 +148,10 @@ const translations = {
     absorbanceReady: 'Absorbance calculated.',
     ready: 'Ready',
     liveSignal: 'LIVE SIGNAL',
+    fullscreen: 'Full screen',
+    exitFullscreen: 'Exit full screen',
+    fullscreenUnsupported: 'This browser does not support full screen mode.',
+    fullscreenFailed: 'Full screen could not be opened.',
     spectrometer: 'MOBILE PHOTOSPECTROMETER',
     reportTitle: 'Measurement report',
     reportCopy: 'Compare the RGB channels and export the session for Excel.',
@@ -319,6 +327,9 @@ const exportMeasurementsButton = document.querySelector('#exportMeasurementsButt
 const clearMeasurementsButton = document.querySelector('#clearMeasurementsButton');
 const languageButton = document.querySelector('#languageButton');
 const languageCode = document.querySelector('#languageCode');
+const fullscreenButton = document.querySelector('#fullscreenButton');
+const fullscreenEnterIcon = document.querySelector('#fullscreenEnterIcon');
+const fullscreenExitIcon = document.querySelector('#fullscreenExitIcon');
 const userNameInput = document.querySelector('#userNameInput');
 const workspaceInput = document.querySelector('#workspaceInput');
 const saveProfileButton = document.querySelector('#saveProfileButton');
@@ -366,6 +377,45 @@ function refreshIcons() {
   globalThis.lucide?.createIcons?.();
 }
 
+function isFullscreenActive() {
+  return Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function updateFullscreenButton() {
+  const active = isFullscreenActive();
+  const enterIcon = document.querySelector('#fullscreenEnterIcon') || fullscreenEnterIcon;
+  const exitIcon = document.querySelector('#fullscreenExitIcon') || fullscreenExitIcon;
+  enterIcon.hidden = active;
+  exitIcon.hidden = !active;
+  const label = active ? t('exitFullscreen') : t('fullscreen');
+  fullscreenButton.setAttribute('aria-label', label);
+  fullscreenButton.title = label;
+}
+
+async function toggleFullscreen() {
+  try {
+    if (isFullscreenActive()) {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+      return;
+    }
+
+    const root = document.documentElement;
+    if (root.requestFullscreen) {
+      await root.requestFullscreen();
+    } else if (root.webkitRequestFullscreen) {
+      root.webkitRequestFullscreen();
+    } else {
+      fullscreenButton.title = t('fullscreenUnsupported');
+    }
+  } catch {
+    fullscreenButton.title = t('fullscreenFailed');
+  }
+}
+
 function rgbToHex(red, green, blue) {
   return `#${[red, green, blue]
     .map((value) => Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0'))
@@ -409,6 +459,7 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
     node.placeholder = t(node.dataset.i18nPlaceholder);
   });
+  updateFullscreenButton();
   setStatus(t('cameraPrompt'));
   absorbanceStatus.textContent = blankRgb ? t('blankReady') : t('blankRequired');
   renderAll();
@@ -1364,6 +1415,10 @@ languageButton.addEventListener('click', () => {
   writeJson(storageKeys.settings, settings);
   applyLanguage();
 });
+
+fullscreenButton.addEventListener('click', toggleFullscreen);
+document.addEventListener('fullscreenchange', updateFullscreenButton);
+document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
 
 saveProfileButton.addEventListener('click', () => {
   profile = {

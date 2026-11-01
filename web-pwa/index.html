@@ -24,13 +24,16 @@
           </div>
         </div>
         <div class="header-actions">
-          <button class="small-button" type="button" data-go="profile">
+          <button class="icon-button header-icon-button" type="button" data-go="profile" aria-label="Profile" title="Profile">
             <i data-lucide="user-round" class="button-icon" aria-hidden="true"></i>
-            <span data-i18n="profileShort">Profile</span>
           </button>
-          <button id="languageButton" class="small-button" type="button" aria-label="Change language" title="Change language">
+          <button id="languageButton" class="icon-button header-icon-button" type="button" aria-label="Change language" title="Change language">
             <i data-lucide="languages" class="button-icon" aria-hidden="true"></i>
-            <span id="languageCode">TR</span>
+            <span id="languageCode" class="sr-only">TR</span>
+          </button>
+          <button id="fullscreenButton" class="icon-button header-icon-button" type="button" aria-label="Full screen" title="Full screen">
+            <i id="fullscreenEnterIcon" data-lucide="maximize" class="button-icon" aria-hidden="true"></i>
+            <i id="fullscreenExitIcon" data-lucide="minimize" class="button-icon" aria-hidden="true" hidden></i>
           </button>
         </div>
       </header>
