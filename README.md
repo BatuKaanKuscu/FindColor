@@ -163,9 +163,7 @@ Apple Developer hesabi olmadan iPhone'da uygulama benzeri deneyim icin repo icin
 - [web-pwa/manifest.webmanifest](web-pwa/manifest.webmanifest)
 - [render.yaml](render.yaml)
 
-Bu surum Safari uzerinden kamera izni ister, merkez 50x50 piksel alanini analiz eder, RGB/HEX sonucunu gosterir ve ana ekrana eklenebilir.
-
-PWA surumunde AI Kamera sekmesi de vardir. Bu sekme prompt istemeden AI kameradan alinan fotografin tamamini Pollinations vision endpoint'ine gonderir. Model grafitinin konumunu ve kapatma icin uygun duvar renklerini JSON olarak belirler; ardindan Apache-2.0 lisansli LaMa ONNX inpainting modeli tarayici icinde calisarak grafiti ayni duvar fotografi uzerinde gercekten yeniden doldurur. Model ve fotograf cihazda islenir, API anahtari veya gorsel uretim token'i gerekmez. Renkler sonucun altinda palet olarak gosterilir. Ilk kullanimda yaklasik 62 MB model indirilir ve cihaz tarayicisi onbellege alir. Vision istegi internet baglantisina ve public rate limitlerine baglidir.
+Bu surum Safari uzerinden kamera izni ister, kamerada suruklenebilir kare ROI alani gosterir ve secili bolgenin RGB/HEX sonucunu gunceller. `Blank Al [Saf Su]` dugmesi referans yogunlugunu (`I0`) kaydeder; `Numune Oku` dugmesi numune yogunlugunu (`I`) alip kanal bazli ve ortalama absorbansi `A = -log10(I / I0)` formuluyle hesaplar. AI ve cihaz sekmeleri bu PWA surumunden kaldirilmistir.
 
 Render ayarlari:
 

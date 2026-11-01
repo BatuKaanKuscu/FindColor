@@ -1,4 +1,4 @@
-const CACHE_NAME = 'find-color-pwa-v13';
+const CACHE_NAME = 'find-color-pwa-v14';
 const ASSETS = [
   './',
   './index.html',

@@ -315,20 +315,18 @@ h2 {
   font-size: 24px;
 }
 
-.measurement-box {
+.roi-box {
   position: absolute;
-  top: 39%;
-  left: 50%;
-  width: 116px;
-  height: 116px;
+  z-index: 2;
   border: 2px solid #fff;
   border-radius: 8px;
-  box-shadow: 0 0 0 999px rgb(0 0 0 / 5%), 0 8px 28px rgb(0 0 0 / 34%);
-  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 999px rgb(0 0 0 / 12%), 0 8px 28px rgb(0 0 0 / 34%);
+  cursor: move;
+  touch-action: none;
 }
 
-.measurement-box::before,
-.measurement-box::after {
+.roi-box::before,
+.roi-box::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -338,12 +336,12 @@ h2 {
   transform: translate(-50%, -50%);
 }
 
-.measurement-box::before {
+.roi-box::before {
   width: 26px;
   height: 2px;
 }
 
-.measurement-box::after {
+.roi-box::after {
   width: 2px;
   height: 26px;
 }
@@ -416,6 +414,26 @@ h2 {
   white-space: nowrap;
 }
 
+.absorbance-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.absorbance-values > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.absorbance-values strong {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
 .status-text {
   min-height: 18px;
   margin: 12px 0 0;
@@ -430,9 +448,14 @@ h2 {
 
 .actions {
   display: grid;
-  grid-template-columns: 1fr 48px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
+}
+
+.actions .icon-button {
+  justify-self: end;
+  width: 48px;
 }
 
 .color-strip {
@@ -786,7 +809,7 @@ h2 {
   bottom: calc(env(safe-area-inset-bottom) + 10px);
   left: max(12px, calc((100vw - 460px) / 2 + 12px));
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 6px;
   padding: 8px;
   border: 1px solid var(--line);

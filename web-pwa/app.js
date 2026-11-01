@@ -24,10 +24,21 @@ const translations = {
     topDevice: 'Cihaz',
     liveCamera: 'CANLI KAMERA',
     centerSampling: 'Merkez olcum',
+    roiSelection: 'ROI secimi',
     startCamera: 'Kamerayi Baslat',
     detectedColor: 'ALGILANAN RENK',
     cameraPrompt: 'Baslamak icin kamera izni ver.',
     saveColor: 'Rengi Kaydet',
+    blankRgb: 'Blank RGB',
+    sampleRgb: 'Numune RGB',
+    absorbance: 'Absorbans A',
+    blankRead: 'Blank Al [Saf Su]',
+    sampleRead: 'Numune Oku',
+    blankRequired: 'Once saf su ile blank okuyun.',
+    blankReady: 'Blank kaydedildi. Simdi numuneyi ROI icine alin.',
+    blankSaved: 'Saf su blank degeri kaydedildi.',
+    sampleSaved: 'Numune okundu.',
+    absorbanceReady: 'Absorbans hesaplandi.',
     catalog: 'KATALOG',
     colorGallery: 'Renk galerisi',
     clear: 'Temizle',
@@ -122,10 +133,21 @@ const translations = {
     topDevice: 'Device',
     liveCamera: 'LIVE CAMERA',
     centerSampling: 'Center sampling',
+    roiSelection: 'ROI selection',
     startCamera: 'Start Camera',
     detectedColor: 'DETECTED COLOR',
     cameraPrompt: 'Allow camera access to start.',
     saveColor: 'Save Color',
+    blankRgb: 'Blank RGB',
+    sampleRgb: 'Sample RGB',
+    absorbance: 'Absorbance A',
+    blankRead: 'Blank Al [Pure Water]',
+    sampleRead: 'Read Sample',
+    blankRequired: 'Read the blank with pure water first.',
+    blankReady: 'Blank saved. Place the sample inside the ROI.',
+    blankSaved: 'Pure water blank saved.',
+    sampleSaved: 'Sample read.',
+    absorbanceReady: 'Absorbance calculated.',
     catalog: 'CATALOG',
     colorGallery: 'Color gallery',
     clear: 'Clear',
@@ -265,6 +287,8 @@ const hueNames = {
 
 const video = document.querySelector('#cameraFeed');
 const canvas = document.querySelector('#sampleCanvas');
+const cameraStage = document.querySelector('.camera-stage');
+const roiBox = document.querySelector('#roiBox');
 const colorPreview = document.querySelector('#colorPreview');
 const rgbValue = document.querySelector('#rgbValue');
 const hexValue = document.querySelector('#hexValue');
@@ -284,44 +308,30 @@ const formulaSwatch = document.querySelector('#formulaSwatch');
 const formulaColorTitle = document.querySelector('#formulaColorTitle');
 const recipeList = document.querySelector('#recipeList');
 const mlInput = document.querySelector('#mlInput');
-const deviceMlInput = document.querySelector('#deviceMlInput');
-const deviceState = document.querySelector('#deviceState');
-const connectDeviceButton = document.querySelector('#connectDeviceButton');
-const sendRecipeButton = document.querySelector('#sendRecipeButton');
-const deviceLog = document.querySelector('#deviceLog');
+const blankButton = document.querySelector('#blankButton');
+const sampleButton = document.querySelector('#sampleButton');
+const blankRgbValue = document.querySelector('#blankRgbValue');
+const sampleRgbValue = document.querySelector('#sampleRgbValue');
+const absorbanceValue = document.querySelector('#absorbanceValue');
+const absorbanceStatus = document.querySelector('#absorbanceStatus');
 const languageButton = document.querySelector('#languageButton');
 const userNameInput = document.querySelector('#userNameInput');
 const workspaceInput = document.querySelector('#workspaceInput');
 const saveProfileButton = document.querySelector('#saveProfileButton');
 const welcomeTitle = document.querySelector('#welcomeTitle');
 const themePalette = document.querySelector('#themePalette');
-const aiCameraFeed = document.querySelector('#aiCameraFeed');
-const aiCaptureCanvas = document.querySelector('#aiCaptureCanvas');
-const capturedAIPhoto = document.querySelector('#capturedAIPhoto');
-const aiCameraPlaceholder = document.querySelector('#aiCameraPlaceholder');
-const startAICameraButton = document.querySelector('#startAICameraButton');
-const captureAIPhotoButton = document.querySelector('#captureAIPhotoButton');
-const aiStatusText = document.querySelector('#aiStatusText');
-const aiDetectedColors = document.querySelector('#aiDetectedColors');
-const aiColorCount = document.querySelector('#aiColorCount');
-const generatedImage = document.querySelector('#generatedImage');
-const aiImagePlaceholder = document.querySelector('#aiImagePlaceholder');
-const openGeneratedImageLink = document.querySelector('#openGeneratedImageLink');
-const aiImageFrame = document.querySelector('.ai-image-frame');
 const context = canvas.getContext('2d', { willReadFrequently: true });
 
 const measurementSize = 50;
 const sampleStep = 2;
 const analysisIntervalMs = 400;
-const lamaModelUrl = 'https://huggingface.co/g-ronimo/lama/resolve/main/lama_512_int8.onnx';
-const lamaInputSize = 512;
-
 let stream = null;
-let aiStream = null;
 let analysisTimer = null;
 let liveColor = null;
-let deviceConnected = false;
-let lamaSessionPromise = null;
+let blankRgb = null;
+let sampleRgb = null;
+let roi = { x: 0.36, y: 0.2, size: 0.3 };
+let roiDrag = null;
 
 let colors = readJson(storageKeys.colors, []);
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
@@ -374,9 +384,6 @@ function setView(viewName) {
     stopCamera();
   }
 
-  if (viewName !== 'ai') {
-    stopAICamera();
-  }
 }
 
 function applyLanguage() {
@@ -389,7 +396,7 @@ function applyLanguage() {
     node.placeholder = t(node.dataset.i18nPlaceholder);
   });
   setStatus(t('cameraPrompt'));
-  setAIStatus(t('aiReady'));
+  absorbanceStatus.textContent = blankRgb ? t('blankReady') : t('blankRequired');
   renderAll();
 }
 
@@ -406,21 +413,116 @@ function updateColor(color) {
   rgbValue.textContent = `${color.red}, ${color.green}, ${color.blue}`;
   hexValue.textContent = color.hex;
   measureButton.disabled = false;
+  blankButton.disabled = false;
 }
 
-function analyzeCenterColor() {
-  if (!video.videoWidth || !video.videoHeight) {
+function getVideoContentRect() {
+  const stageRect = cameraStage.getBoundingClientRect();
+  const videoRatio = video.videoWidth / video.videoHeight;
+  const stageRatio = stageRect.width / stageRect.height;
+  let width = stageRect.width;
+  let height = stageRect.height;
+
+  if (videoRatio > stageRatio) {
+    width = stageRect.height * videoRatio;
+  } else {
+    height = stageRect.width / videoRatio;
+  }
+
+  return {
+    left: stageRect.left + (stageRect.width - width) / 2,
+    top: stageRect.top + (stageRect.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+function syncROIBox() {
+  if (!roiBox || !cameraStage) {
     return;
   }
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const stageRect = cameraStage.getBoundingClientRect();
+  const side = roi.size * Math.min(stageRect.width, stageRect.height);
+  roi.x = Math.max(0, Math.min(1 - side / stageRect.width, roi.x));
+  roi.y = Math.max(0, Math.min(1 - side / stageRect.height, roi.y));
+  roiBox.style.width = `${side}px`;
+  roiBox.style.height = `${side}px`;
+  roiBox.style.left = `${roi.x * stageRect.width}px`;
+  roiBox.style.top = `${roi.y * stageRect.height}px`;
+  roiBox.setAttribute('aria-valuenow', String(Math.round(roi.size * 100)));
+}
 
-  const area = Math.min(measurementSize, canvas.width, canvas.height);
-  const startX = Math.max(0, Math.floor((canvas.width - area) / 2));
-  const startY = Math.max(0, Math.floor((canvas.height - area) / 2));
-  const imageData = context.getImageData(startX, startY, area, area).data;
+function handleROIStart(event) {
+  if (event.button !== undefined && event.button !== 0) {
+    return;
+  }
+
+  const stageRect = cameraStage.getBoundingClientRect();
+  roiDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    roiX: roi.x,
+    roiY: roi.y,
+    stageWidth: stageRect.width,
+    stageHeight: stageRect.height,
+  };
+  roiBox.setPointerCapture?.(event.pointerId);
+  event.preventDefault();
+}
+
+function handleROIMove(event) {
+  if (!roiDrag || event.pointerId !== roiDrag.pointerId) {
+    return;
+  }
+
+  const stageRect = cameraStage.getBoundingClientRect();
+  const side = roi.size * Math.min(stageRect.width, stageRect.height);
+  roi.x = Math.max(
+    0,
+    Math.min(1 - side / stageRect.width, roiDrag.roiX + (event.clientX - roiDrag.startX) / roiDrag.stageWidth),
+  );
+  roi.y = Math.max(
+    0,
+    Math.min(1 - side / stageRect.height, roiDrag.roiY + (event.clientY - roiDrag.startY) / roiDrag.stageHeight),
+  );
+  syncROIBox();
+}
+
+function handleROIEnd(event) {
+  if (roiDrag?.pointerId === event.pointerId) {
+    roiDrag = null;
+  }
+}
+
+function getROISourceRect() {
+  const content = getVideoContentRect();
+  const box = roiBox.getBoundingClientRect();
+  const left = Math.max(content.left, box.left);
+  const top = Math.max(content.top, box.top);
+  const right = Math.min(content.left + content.width, box.right);
+  const bottom = Math.min(content.top + content.height, box.bottom);
+
+  return {
+    x: Math.max(0, ((left - content.left) / content.width) * video.videoWidth),
+    y: Math.max(0, ((top - content.top) / content.height) * video.videoHeight),
+    width: Math.max(1, ((right - left) / content.width) * video.videoWidth),
+    height: Math.max(1, ((bottom - top) / content.height) * video.videoHeight),
+  };
+}
+
+function readROIColor() {
+  if (!video.videoWidth || !video.videoHeight) {
+    return null;
+  }
+
+  const source = getROISourceRect();
+  const area = 80;
+  canvas.width = area;
+  canvas.height = area;
+  context.drawImage(video, source.x, source.y, source.width, source.height, 0, 0, area, area);
+  const imageData = context.getImageData(0, 0, area, area).data;
 
   let totalR = 0;
   let totalG = 0;
@@ -438,13 +540,72 @@ function analyzeCenterColor() {
   }
 
   if (!pixelCount) {
-    return;
+    return null;
   }
 
   const red = Math.round(totalR / pixelCount);
   const green = Math.round(totalG / pixelCount);
   const blue = Math.round(totalB / pixelCount);
-  updateColor({ red, green, blue, hex: rgbToHex(red, green, blue) });
+  return { red, green, blue, hex: rgbToHex(red, green, blue) };
+}
+
+function analyzeROIColor() {
+  const color = readROIColor();
+  if (color) {
+    updateColor(color);
+  }
+}
+
+function formatRgb(color) {
+  return color ? `${color.red}, ${color.green}, ${color.blue}` : '-';
+}
+
+function calculateAbsorbance(blank, sample) {
+  const channels = ['red', 'green', 'blue'];
+  const values = channels.map((channel) => {
+    const blankIntensity = Math.max(1, blank[channel]);
+    const sampleIntensity = Math.max(1, sample[channel]);
+    return Math.max(0, -Math.log10(sampleIntensity / blankIntensity));
+  });
+
+  return {
+    red: values[0],
+    green: values[1],
+    blue: values[2],
+    mean: values.reduce((sum, value) => sum + value, 0) / values.length,
+  };
+}
+
+function captureBlank() {
+  const color = readROIColor();
+  if (!color) {
+    setStatus(t('cameraPrompt'), true);
+    return;
+  }
+
+  blankRgb = color;
+  sampleRgb = null;
+  blankRgbValue.textContent = formatRgb(blankRgb);
+  sampleRgbValue.textContent = '-';
+  absorbanceValue.textContent = '-';
+  sampleButton.disabled = false;
+  absorbanceStatus.textContent = t('blankReady');
+  setStatus(t('blankSaved'));
+}
+
+function captureSample() {
+  const color = readROIColor();
+  if (!blankRgb || !color) {
+    absorbanceStatus.textContent = t('blankRequired');
+    return;
+  }
+
+  sampleRgb = color;
+  const result = calculateAbsorbance(blankRgb, sampleRgb);
+  sampleRgbValue.textContent = formatRgb(sampleRgb);
+  absorbanceValue.textContent = `${result.mean.toFixed(3)} (R ${result.red.toFixed(3)} / G ${result.green.toFixed(3)} / B ${result.blue.toFixed(3)})`;
+  absorbanceStatus.textContent = t('sampleSaved');
+  setStatus(t('absorbanceReady'));
 }
 
 function stopCamera() {
@@ -464,7 +625,6 @@ function stopCamera() {
 
 async function startCamera() {
   stopCamera();
-  stopAICamera();
 
   if (!navigator.mediaDevices?.getUserMedia) {
     setStatus(t('cameraUnsupported'), true);
@@ -491,8 +651,9 @@ async function startCamera() {
     await video.play();
     startButton.classList.add('is-hidden');
     setStatus(t('measuring'));
-    analyzeCenterColor();
-    analysisTimer = window.setInterval(analyzeCenterColor, analysisIntervalMs);
+    syncROIBox();
+    analyzeROIColor();
+    analysisTimer = window.setInterval(analyzeROIColor, analysisIntervalMs);
   } catch (error) {
     stopCamera();
     startButton.classList.remove('is-hidden');
@@ -501,93 +662,6 @@ async function startCamera() {
   } finally {
     startButton.disabled = false;
   }
-}
-
-function stopAICamera() {
-  if (aiStream) {
-    aiStream.getTracks().forEach((track) => track.stop());
-    aiStream = null;
-  }
-
-  aiCameraFeed.pause();
-  aiCameraFeed.srcObject = null;
-  aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-camera');
-}
-
-async function startAICamera() {
-  stopCamera();
-
-  if (!navigator.mediaDevices?.getUserMedia) {
-    setAIStatus(t('cameraUnsupported'), true);
-    return;
-  }
-
-  if (!window.isSecureContext) {
-    setAIStatus(t('cameraNeedsSecureContext'), true);
-    return;
-  }
-
-  try {
-    startAICameraButton.disabled = true;
-    captureAIPhotoButton.disabled = true;
-    setAIStatus(t('aiCameraStarting'));
-    aiStream = await requestCameraStream();
-
-    aiCameraFeed.setAttribute('playsinline', '');
-    aiCameraFeed.setAttribute('autoplay', '');
-    aiCameraFeed.muted = true;
-    aiCameraFeed.playsInline = true;
-    aiCameraFeed.srcObject = aiStream;
-    await waitForAIVideoMetadata();
-    await aiCameraFeed.play();
-
-    capturedAIPhoto.removeAttribute('src');
-    aiCameraFeed.closest('.ai-camera-frame').classList.add('has-camera');
-    aiCameraFeed.closest('.ai-camera-frame').classList.remove('has-capture');
-    setAIStatus(t('aiCameraReady'));
-  } catch (error) {
-    stopAICamera();
-    setAIStatus(buildCameraErrorMessage(error), true);
-  } finally {
-    startAICameraButton.disabled = false;
-    captureAIPhotoButton.disabled = false;
-  }
-}
-
-function waitForAIVideoMetadata() {
-  if (aiCameraFeed.videoWidth && aiCameraFeed.videoHeight) {
-    return Promise.resolve();
-  }
-
-  return new Promise((resolve) => {
-    const timeout = window.setTimeout(resolve, 1500);
-    aiCameraFeed.addEventListener(
-      'loadedmetadata',
-      () => {
-        window.clearTimeout(timeout);
-        resolve();
-      },
-      { once: true },
-    );
-  });
-}
-
-function captureAIPhotoDataUrl() {
-  if (!aiStream || !aiCameraFeed.videoWidth || !aiCameraFeed.videoHeight) {
-    throw new Error(t('aiPhotoRequired'));
-  }
-
-  const maxSize = 768;
-  const ratio = Math.min(maxSize / aiCameraFeed.videoWidth, maxSize / aiCameraFeed.videoHeight, 1);
-  const width = Math.round(aiCameraFeed.videoWidth * ratio);
-  const height = Math.round(aiCameraFeed.videoHeight * ratio);
-  const context2d = aiCaptureCanvas.getContext('2d', { willReadFrequently: true });
-
-  aiCaptureCanvas.width = width;
-  aiCaptureCanvas.height = height;
-  context2d.drawImage(aiCameraFeed, 0, 0, width, height);
-
-  return aiCaptureCanvas.toDataURL('image/jpeg', 0.82);
 }
 
 async function requestCameraStream() {
@@ -1338,10 +1412,14 @@ document.querySelectorAll('.nav-button').forEach((button) => {
 startButton.addEventListener('click', startCamera);
 retryButton.addEventListener('click', startCamera);
 measureButton.addEventListener('click', saveLiveColor);
-startAICameraButton.addEventListener('click', startAICamera);
-captureAIPhotoButton.addEventListener('click', captureAndGenerateAIPhoto);
+blankButton.addEventListener('click', captureBlank);
+sampleButton.addEventListener('click', captureSample);
+roiBox.addEventListener('pointerdown', handleROIStart);
+roiBox.addEventListener('pointermove', handleROIMove);
+roiBox.addEventListener('pointerup', handleROIEnd);
+roiBox.addEventListener('pointercancel', handleROIEnd);
+window.addEventListener('resize', syncROIBox);
 mlInput.addEventListener('input', renderFormula);
-deviceMlInput.addEventListener('input', () => {});
 
 clearGalleryButton.addEventListener('click', () => {
   if (!window.confirm(t('clearConfirm'))) {
@@ -1353,37 +1431,6 @@ clearGalleryButton.addEventListener('click', () => {
   writeJson(storageKeys.colors, colors);
   writeJson(storageKeys.selectedColor, selectedColor);
   renderAll();
-});
-
-connectDeviceButton.addEventListener('click', () => {
-  deviceConnected = !deviceConnected;
-  deviceState.textContent = deviceConnected ? t('online') : t('offline');
-  deviceState.classList.toggle('is-online', deviceConnected);
-  deviceLog.textContent = deviceConnected ? t('demoConnected') : '';
-});
-
-sendRecipeButton.addEventListener('click', () => {
-  if (!selectedColor) {
-    deviceLog.textContent = t('selectColorFirst');
-    return;
-  }
-
-  const totalMl = Math.max(10, Number(deviceMlInput.value) || 250);
-  const recipe = colorToRecipe(selectedColor, totalMl).map((item) => ({
-    material: item.label,
-    percent: Number(item.percent.toFixed(1)),
-    ml: Number(item.ml.toFixed(1)),
-  }));
-
-  deviceLog.textContent = `${t('recipeSent')}\n\n${JSON.stringify(
-    {
-      color: selectedColor.hex,
-      totalMl,
-      recipe,
-    },
-    null,
-    2,
-  )}`;
 });
 
 languageButton.addEventListener('click', () => {
@@ -1402,12 +1449,11 @@ saveProfileButton.addEventListener('click', () => {
   };
   writeJson(storageKeys.profile, profile);
   renderProfile();
-  deviceLog.textContent = t('profileSaved');
+  setStatus(t('profileSaved'));
 });
 
 window.addEventListener('pagehide', () => {
   stopCamera();
-  stopAICamera();
 });
 
 applyTheme();
