@@ -248,7 +248,7 @@ const pigmentLabels = {
   },
 };
 
-const themeOptions = ['#4dd0e1', '#6ee7b7', '#f8c146', '#ff7a90', '#a78bfa'];
+const themeOptions = ['#2f8f5b', '#83b94c', '#e9a93b', '#d96c75', '#4f91b6'];
 
 const catalogColors = [
   { id: 'cat-coral', name: { tr: 'Canli mercan', en: 'Vivid coral' }, red: 255, green: 92, blue: 92, hex: '#FF5C5C' },
@@ -359,7 +359,10 @@ if (!Array.isArray(measurements)) {
   measurements = [];
 }
 let profile = readJson(storageKeys.profile, { name: '', workspace: '' });
-let settings = readJson(storageKeys.settings, { language: 'tr', accent: '#4dd0e1' });
+let settings = readJson(storageKeys.settings, { language: 'tr', accent: '#2f8f5b' });
+if (settings.accent === '#4dd0e1') {
+  settings = { ...settings, accent: '#2f8f5b' };
+}
 let selectedColor = readJson(storageKeys.selectedColor, colors[0] || null);
 
 function readJson(key, fallback) {
@@ -786,7 +789,7 @@ function drawAbsorbanceChart() {
   const chartContext = absorbanceChart.getContext('2d');
   chartContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
   chartContext.clearRect(0, 0, width, height);
-  chartContext.fillStyle = '#0b0d10';
+  chartContext.fillStyle = '#f8fcf6';
   chartContext.fillRect(0, 0, width, height);
 
   const series = measurements.slice(0, 24).reverse();
@@ -806,10 +809,10 @@ function drawAbsorbanceChart() {
   const plotWidth = width - plot.left - plot.right;
   const plotHeight = height - plot.top - plot.bottom;
   const colorsByChannel = {
-    red: '#ff7a90',
-    green: '#6ee7b7',
-    blue: '#69a7ff',
-    mean: '#f8c146',
+    red: '#d96c75',
+    green: '#2f8f5b',
+    blue: '#4f91b6',
+    mean: '#e9a93b',
   };
 
   chartContext.font = '11px system-ui, sans-serif';
@@ -817,18 +820,18 @@ function drawAbsorbanceChart() {
   for (let step = 0; step <= 4; step += 1) {
     const value = (maxValue / 4) * step;
     const y = plot.top + plotHeight - (plotHeight * step) / 4;
-    chartContext.strokeStyle = 'rgb(255 255 255 / 10%)';
+    chartContext.strokeStyle = 'rgb(23 51 38 / 12%)';
     chartContext.lineWidth = 1;
     chartContext.beginPath();
     chartContext.moveTo(plot.left, y);
     chartContext.lineTo(width - plot.right, y);
     chartContext.stroke();
-    chartContext.fillStyle = '#aeb7c2';
+    chartContext.fillStyle = '#627a6d';
     chartContext.textAlign = 'right';
     chartContext.fillText(value.toFixed(1), plot.left - 8, y);
   }
 
-  chartContext.strokeStyle = 'rgb(255 255 255 / 22%)';
+  chartContext.strokeStyle = 'rgb(23 51 38 / 30%)';
   chartContext.beginPath();
   chartContext.moveTo(plot.left, plot.top);
   chartContext.lineTo(plot.left, height - plot.bottom);
@@ -857,7 +860,7 @@ function drawAbsorbanceChart() {
   };
 
   ['red', 'green', 'blue', 'mean'].forEach(drawSeries);
-  chartContext.fillStyle = '#aeb7c2';
+  chartContext.fillStyle = '#627a6d';
   chartContext.textAlign = 'center';
   chartContext.fillText(`1-${series.length}`, plot.left + plotWidth / 2, height - 12);
 }

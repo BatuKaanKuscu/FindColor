@@ -4,8 +4,8 @@
   "description": "Mobil kamera ile yuzey rengini RGB ve HEX olarak olcer.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#101214",
-  "theme_color": "#101214",
+  "background_color": "#f3f7f1",
+  "theme_color": "#2f8f5b",
   "orientation": "portrait",
   "icons": [
     {
