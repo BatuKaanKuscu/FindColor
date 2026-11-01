@@ -100,16 +100,14 @@ input:focus-visible {
   height: 38px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid #a7f5df;
   border-radius: 10px;
-  background: var(--accent);
-  color: var(--accent-ink);
+  overflow: hidden;
 }
 
-.brand-icon {
-  width: 21px;
-  height: 21px;
-  stroke-width: 2.3;
+.brand-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .brand-lockup h1 {
